@@ -1,0 +1,143 @@
+<html>
+<head>
+
+ 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+	<!--script>window.jQuery || document.write('<script src="//jqueryui.com/jquery-wp-content/themes/jquery/js/jquery-1.11.2.min.js"><\/script>')</script>
+	<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="js/jquery.mousewheel.js"></script>
+	<script src="http://jqueryui.com/jquery-wp-content/themes/jquery/js/plugins.js"></script>
+	<script src="http://jqueryui.com/jquery-wp-content/themes/jquery/js/main.js"></script-->
+	
+	<!--script src="js/updown.js"></script-->
+	<script src="contextmenu/contextMenu.js"></script>
+	<script src="js/jqPropertyGrid.js"></script>
+	<script src="shapes.js"></script>
+	<link rel="stylesheet" href="contextmenu/contextMenu.css">
+	<link rel="stylesheet" href="js/jqPropertyGrid.css">
+<style>
+  
+
+	body {
+		margin:0
+	}
+	#container{
+		height: 100vh;
+		width:100%;
+		overflow:scroll;
+		
+	}
+
+	
+  #sidebar {
+ 	  float:left;
+		margin-left: 20px;
+    margin-right: 20px;
+    width:341px;
+	  
+  }
+	#propGrid {
+		background-color:white;
+		 /* position:absolute; right:20px; z-order:1000 */ 
+  	 position:fixed; 
+    top:20px;
+	}
+	#canvas1 {
+	  display:flex;
+	  margin-left:20px
+	  -moz-box-shadow: 3px 3px 5px 0 #656565;
+    -webkit-box-shadow: 3px 3px 5px 0 #656565;
+    -o-box-shadow: 3px 3px 5px 0 #656565;
+    box-shadow: 3px 3px 5px 0 #656565;
+    filter:progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=135, Strength=5);
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+	}
+	
+	.otherShadow {
+    -moz-box-shadow: 1px 1px 5px 0 #656565;
+    -webkit-box-shadow: 1px 1px 5px 0 #656565;
+    -o-box-shadow: 1px 1px 5px 0 #656565;
+    box-shadow: 1px 1px 5px 0 #656565;
+    filter:progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=134, Strength=5);
+	}
+	
+
+	</style>
+</head>
+<body>
+  
+  
+  <div id='container'>
+	  <div id='log'>&nbsp;</div>
+	  <div id='sidebar'>
+      <div id='propGrid' class="otherShadow"></div>
+      &nbsp;
+    </div>
+    <canvas id="canvas1" width="1000" height="1400" style="float:left;">
+      This text is displayed if your browser does not support HTML5 Canvas.
+    </canvas>
+  </div>
+
+  <div id="menuWrapper">
+    <div id="menuTrigger" class="iw-mTrigger"></div>
+  </div>
+<script>// <![CDATA[
+	$(function() {
+		init();
+	});
+  
+		
+		// This is the metadata object that describes the target object properties (optional)
+		var theMeta = {
+/*
+			font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
+			fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }},
+			fontColor: { group: 'Editor', name: 'Font color', type: 'color', options: { preferredFormat: 'hex' }},
+			jQuery: { group: 'Plugins', description: 'Whether or not to include jQuery on the page' },
+			modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
+			framework: { name: 'Framework', 
+			             group: 'Plugins', 
+			             type: 'options', 
+			             options: [ 'None', 
+			                        {text:'AngularJS', value: 'angular'},
+			                        {text:'Backbone.js', value: 'backbone'}], 
+			             description: 'Whether to include any additional framework'
+			            },
+
+*/
+			x: { group: 'Shape', name: 'x', type: 'number', options: { min: 0, max: 500, step: 10 }},            
+			y: { group: 'Shape', name: 'y', type: 'number', options: { min: 0, max: 500, step: 10 }},            
+			w: { group: 'Shape', name: 'w', type: 'number', options: { min: 0, max: 500, step: 10 }},            
+			h: { group: 'Shape', name: 'h', type: 'number', options: { min: 0, max: 500, step: 10 }},            
+			gridsize: { group: 'Shape', name: 'grid-size', type: 'number', options: { min: 2, max: 50, step: 2}},
+			gridsnap: {group: 'Shape', name: 'grid-snap', type: 'boolean', description: 'Objects snap to grid'},
+			autosize: {group: 'Shape', name: 'canvas auto size', type: 'boolean', description: 'Auto adjust canvas size'},
+			
+			label: { group: 'Shape', name: 'label', type: 'textarea', description: 'Shape label'},
+			description: { group: 'Shape', name: 'Description', type: 'textarea'},
+			className: { name:'Type', 
+			              group: 'Shape', 
+			              type:'options',
+			              options:[ {text:'Action', value:'Box'},
+			                        {text:'Question', value:'Diamond'},
+			                        {text:'Document', value:'Doc'}],
+			              description: 'Kind of shape' 
+			             },
+			execFunction: { name:'Execute', 
+			              group: 'Function', 
+			              type:'options',
+			              options:[ 'none',{text:'Get http response code from url', value:'httpCode'},
+			                        {text:'API Object exists for url', value:'apiObjectExists'},
+			                        {text:'Send a mail to', value:'mailTo'}],
+			              description: 'Action at this step' 
+			             },
+      parameter: { group: 'Function', name: 'Parameters'},
+			trueOnLeft: {group: 'Shape', type: 'boolean', description: 'True link is on the left'},             
+		};
+// ]]></script>
+
+</body>
+</html>

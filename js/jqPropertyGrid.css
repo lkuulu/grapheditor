@@ -1,0 +1,45 @@
+/**
+ * jqPropertyGrid
+ * https://github.com/ValYouW/jqPropertyGrid
+ * Author: YuvalW (ValYouW)
+ * License: MIT
+ */
+.pgTable {
+    /* border: solid 1px #95B8E7; */
+    border-spacing: 0;
+    font-family : verdana;
+    font-size : 10pt;
+    width:341px;
+}
+
+.pgGroupRow {
+    background-color: #E0ECFF;
+    font-weight: bold;
+}
+
+.pgTitleRow {
+    background-color: #E0ECFF;
+    font-weight: bold;
+  
+}
+
+.pgTitleRow img {
+  vertical-align: bottom;
+}
+
+.pgGroupCell {
+    padding: 5px;
+}
+
+.pgRow{
+}
+
+.pgCell {
+    border: dotted 1px #ccc;
+    padding: 5px;
+    min-width:105px;
+}
+
+.pgTooltip {
+    margin-left: 5px;
+}
