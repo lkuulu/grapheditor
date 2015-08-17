@@ -7,7 +7,7 @@
 .pgTable {
     /* border: solid 1px #95B8E7; */
     border-spacing: 0;
-    font-family : verdana;
+    font-family : verdana, sans-serif;
     font-size : 10pt;
     width:341px;
 }
@@ -37,7 +37,7 @@
 .pgCell {
     border: dotted 1px #ccc;
     padding: 5px;
-    min-width:105px;
+    min-width:135px;
 }
 
 .pgTooltip {
