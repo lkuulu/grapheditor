@@ -566,7 +566,7 @@ Linkable.prototype.drawLinks= function(ctx) {
 		ctx.fillRect(cur.x, cur.y, this.myLinkBoxSize, this.myLinkBoxSize);
 	}
 	
-	for (var i=0; i<this.lines.length;i++) {
+    for (var i=0; i<this.lines.length;i++) {
 	  this.lines[i].showBtn = true;
 	}
 };
@@ -1463,6 +1463,7 @@ function CanvasState(canvas) {
     } else {
       callbackEvent(myState);
     }
+    myState.updMenu()
     
   }, true);
   
@@ -1577,12 +1578,10 @@ CanvasState.prototype.updateSelections = function() {
 };
 
 
-CanvasState.prototype.setSelection = function(sel) {
-  this.selection = sel;
-  // update contextmenu state
+CanvasState.prototype.updMenu = function() {
   var updateObj = [{
       name: 'delete',
-      disable: (this.selections.length==0)
+      disable: (this.selections.length!=1)
     }];
   $('#canvas1').contextMenu('update', updateObj, {displayAround: 'cursor', position: 'auto'});
 };
@@ -1677,15 +1676,18 @@ CanvasState.prototype.resize=function(overrideauto) {
 };
 
 /* use introspection to call back those methods in propoerty editor :do not erase */
+//noinspection JSUnusedGlobalSymbols
 CanvasState.prototype.setautosize=function(value) {
 	this.autosize=value;
 	this.resize(false);
 };
 
+//noinspection JSUnusedGlobalSymbols
 CanvasState.prototype.setgridsnap=function(value) {
 	this.grid.snap=value;
 };
 
+//noinspection JSUnusedGlobalSymbols
 CanvasState.prototype.setgridsize=function(value) {
 	this.grid.size=value;
   setGrid();
@@ -1762,7 +1764,6 @@ CanvasState.prototype.draw = function() {
     // draw lines
     var l = lines.length;
     for (var i = 0; i < l; i++) {
-      var line = lines[i];
       lines[i].draw(ctx);
     }
 
@@ -1804,15 +1805,6 @@ CanvasState.prototype.getMouse = function(e) {
   // We return a simple javascript object (a hash) with x and y defined
   return {x: mx, y: my};
 };
-
-// If you dont want to use <body onLoad='init()'>
-// You could uncomment this init() reference and place the script reference inside the body tag
-//init();
-
-function isInt(x) {
-   var y = parseInt(x, 10);
-   return !isNaN(y) && x == y && x.toString() == y.toString();
-}
 
 function callbackEvent(e) {
   showPropertyEditor(e);
