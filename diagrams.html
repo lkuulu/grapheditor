@@ -1,22 +1,27 @@
 <html>
 <head>
-
  	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script src="js/jquery.mousewheel.js"></script>
+	<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 
 	<!--script>window.jQuery || document.write('<script src="//jqueryui.com/jquery-wp-content/themes/jquery/js/jquery-1.11.2.min.js"><\/script>')</script>
 	<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 	<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-	<script src="js/jquery.mousewheel.js"></script>
 	<script src="http://jqueryui.com/jquery-wp-content/themes/jquery/js/plugins.js"></script>
 	<script src="http://jqueryui.com/jquery-wp-content/themes/jquery/js/main.js"></script-->
 	
 	<!--script src="js/updown.js"></script-->
+
+
 	<script src="contextmenu/contextMenu.js"></script>
 	<script src="js/jqPropertyGrid.js"></script>
 	<script src="shapes.js"></script>
 	<link rel="stylesheet" href="contextmenu/contextMenu.css">
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
 	<link rel="stylesheet" href="js/jqPropertyGrid.css">
-<style>
+
+
+	<style>
   
 
 	body {
@@ -34,7 +39,7 @@
  	  float:left;
 		margin-left: 20px;
     margin-right: 20px;
-    width:341px;
+    width:361px;
 	  
   }
 	#propGrid {
@@ -88,8 +93,10 @@
 	$(function() {
 		init();
 	});
-  
-		
+
+function cbval(e, a, b, c, d) {
+	console.log(e, a,b,c,d);
+}
 		// This is the metadata object that describes the target object properties (optional)
 		var theMeta = {
 /*
@@ -108,11 +115,11 @@
 			            },
 
 */
-			x: { group: 'Shape', name: 'x', type: 'number', options: { min: 0, max: 500, step: 10 }},            
-			y: { group: 'Shape', name: 'y', type: 'number', options: { min: 0, max: 500, step: 10 }},            
-			w: { group: 'Shape', name: 'w', type: 'number', options: { min: 0, max: 500, step: 10 }},            
-			h: { group: 'Shape', name: 'h', type: 'number', options: { min: 0, max: 500, step: 10 }},            
-			gridsize: { group: 'Shape', name: 'grid-size', type: 'number', options: { min: 2, max: 50, step: 2}},
+			x: { group: 'Shape', name: 'x', type: 'number', options: { min: 0, step: 1, stop:function(e,ui){update(e.target.dataset.name, e.target.value);}}},
+			y: { group: 'Shape', name: 'y', type: 'number', options: { min: 0, step: 1, stop:function(e,ui){update(e.target.dataset.name, e.target.value);} }},
+			w: { group: 'Shape', name: 'w', type: 'number', options: { min: 0, step: 1, stop:function(e,ui){update(e.target.dataset.name, e.target.value);} }},
+			h: { group: 'Shape', name: 'h', type: 'number', options: { min: 0, step: 1, stop:function(e,ui){update(e.target.dataset.name, e.target.value);} }},
+			gridsize: { group: 'Shape', name: 'grid-size', type: 'number', options: { min: 2, max: 50, step: 2, stop:function(e,ui){update(e.target.dataset.name, e.target.value);}}},
 			gridsnap: {group: 'Shape', name: 'grid-snap', type: 'boolean', description: 'Objects snap to grid'},
 			autosize: {group: 'Shape', name: 'canvas auto size', type: 'boolean', description: 'Auto adjust canvas size'},
 			
@@ -135,8 +142,12 @@
 			              description: 'Action at this step' 
 			             },
       parameter: { group: 'Function', name: 'Parameters'},
-			trueOnLeft: {group: 'Shape', type: 'boolean', description: 'True link is on the left'},             
+			trueOnLeft: {group: 'Shape', type: 'boolean', description: 'True link is on the left'}
 		};
+
+
+
+
 // ]]></script>
 
 </body>

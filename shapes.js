@@ -44,26 +44,6 @@ function consolelog(logs) {
 }
 */
 
-// hack to get .name function in all objects classes
-/*
-Object.prototype.getName = function() { 
-   var funcNameRegex = /function (.{1,})\(/;
-   var results = (funcNameRegex).exec((this).constructor.toString());
-   return (results && results.length > 1) ? results[1] : "";
-};
-
-if (Function.prototype.name === undefined && Object.defineProperty !== undefined) {
-    Object.defineProperty(Function.prototype, 'name', {
-        get: function() {
-            var funcNameRegex = /function\s([^(]{1,})\(/;
-            var results = (funcNameRegex).exec((this).toString());
-            return (results && results.length > 1) ? results[1].trim() : "";
-        },
-        set: function(value) {}
-    });
-}
-*/
-/////
 
 
 function Point(x, y) {

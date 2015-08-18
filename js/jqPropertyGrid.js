@@ -147,11 +147,18 @@ var update;
 		// If number and a jqueryUI spinner is loaded use it
 		} else if (typeof $.fn.spinner === 'function' && (type === 'number' || (type === '' && typeof value === 'number'))) {
 			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '" style="width:50px" data-name="'+name+'" />';
+			if (postCreateInitFuncs) { postCreateInitFuncs.push( initSpinner2( 'input', elemId, name, value, meta.options)); }
 			if (postCreateInitFuncs) { postCreateInitFuncs.push(initSpinner(elemId, meta.options)); }
+			if (getValueFuncs) { getValueFuncs[name] = function() {return $('#'+elemId).spinner('value');}; }
+
+			// If number and a jqueryUI updown is loaded use it
+		} else if (typeof $.fn.updown === 'function' && (type === 'number' || (type === '' && typeof value === 'number'))) {
+			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '" style="width:50px" data-name="'+name+'" />';
+			if (postCreateInitFuncs) { postCreateInitFuncs.push(initUpdown(elemId)); }
 			if (postCreateInitFuncs) { postCreateInitFuncs.push( callBackValue('input', elemId, name, value, meta.options)); }
 			if (getValueFuncs) { getValueFuncs[name] = function() {return $('#'+elemId).spinner('value');}; }
 
-		// If color and we have the spectrum color picker use it
+			// If color and we have the spectrum color picker use it
 		} else if (type === 'color' && typeof $.fn.spectrum === 'function') {
 			valueHTML = '<input type="text" id="' + elemId + '"/>';
 			if (postCreateInitFuncs) { postCreateInitFuncs.push(initColorPicker(elemId, value, meta.options)); }
@@ -236,6 +243,30 @@ var update;
 			$('#' + id).spinner(opts);
 		};
 	}
+
+	function initSpinner2(event, id, name, value, options) {
+		if (!id) {return null;}
+
+		setTimeout(
+		  function() {
+			$( '#' + id ).on( event, function() {
+				console.log('initSpinner2');
+				update(name, $(this).val());
+			});
+		},50);
+	}
+
+
+	function initUpdown(id) {
+		if (!id) {return null;}
+		var opts = { step: 1,
+			         shiftStep: 10
+		           };
+		return function() {
+			$('#' + id).updown(opts);
+		};
+	}
+
 
   function callBackValue(event, id, name, value, options)  {
   	setTimeout(

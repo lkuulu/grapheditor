@@ -9,7 +9,7 @@
     border-spacing: 0;
     font-family : verdana, sans-serif;
     font-size : 10pt;
-    width:341px;
+    width:361px;
 }
 
 .pgGroupRow {
@@ -21,6 +21,9 @@
     background-color: #E0ECFF;
     font-weight: bold;
   
+}
+.ui-widget input {
+    font-size: 10pt;
 }
 
 .pgTitleRow img {
