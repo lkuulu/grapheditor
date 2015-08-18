@@ -33,6 +33,7 @@
 // * - keyboard event to callback events (move / resize / delete)
 // ********************************************************************
 
+var s;
 
 var globalColor = 'rgba(224, 236, 255, 0.8)';
 var canvasMargin = 20;
@@ -44,7 +45,66 @@ var direction = {
   'toTop':1,
   'toRight':2,
   'toBottom':4
-}
+};
+
+/* global values */
+execFunctions = {
+  'httpCode':'Get http response code from url',
+  'apiObjectExists':'API Object exists for url',
+  'mailTo':'Send a mail to'
+};
+
+propertiesTypes = {
+  'className':'className',
+  'x':'int',
+  'y':'int',
+  'w':'int',
+  'h':'int',
+  'label':'string',
+  'description':'string',
+  'execFunction':'string',
+  'parameter':'string',
+  'trueOnLeft':'boolean',
+  'gridsize':'int',
+  'gridsnap':'boolean',
+  'autosize':'boolean'
+};
+
+var menu = [{
+  name: 'create',
+  img: 'images/create.png',
+  title: 'Create shape',
+  subMenu: [{
+    'name': 'Question',
+    fun: function () {
+      s.addShape(new Diamond(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90,'', globalColor));
+    }
+  },{
+    'name': 'Action',
+    fun: function () {
+      s.addShape(new Box(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90,'', globalColor));
+    }
+  },{
+    'name': 'Document',
+    fun: function () {
+      s.addShape(new Doc(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90,'', globalColor));
+    }
+  }]
+}, {
+  name: 'delete',
+  img: 'images/delete.png',
+  title: 'Delete shape',
+  fun: function () {
+    s.deleteSelection();
+  }
+}, {
+  name: 'download',
+  img: 'images/saveimage.png',
+  title: 'Download as image',
+  fun: function () {
+    s.download();
+  }
+}];
 
 /*
 function consolelog(logs) {
@@ -52,8 +112,6 @@ function consolelog(logs) {
 	document.getElementById('log').innerHTML=logs;
 }
 */
-
-
 
 function Point(x, y) {
 	this.x=x;
@@ -69,21 +127,6 @@ function Grid(size) {
   this.snap = true;
   this.color = 'rgba(0,0,0,.4)';
 }
-
-// draw the grid if active
-Grid.prototype.draw = function (ctx) {
-  // no more stuff here,
-  // grid is CSS background generated in init section
-  // adding background gradient && size
-  /* Old mode **
-  if (!this.active) return;
-  ctx.fillStyle = '#b3b3b3';
-  for (var x = 0; x<ctx.canvas.width; x++)
-    for (var y = 0; y<ctx.canvas.height; y++) 
-      if (x%this.size==0 && y%this.size==0)
-        ctx.fillRect(x,y,1,1);
-  */      
-};
 
 Grid.prototype.nearest = function(value) {
   if (!this.snap) 
@@ -1119,8 +1162,6 @@ function CanvasState(canvas) {
     var shapes = myState.shapes;
     var l = shapes.length;
 
-    console.log('mousedown');
-
     myState.lastCtxMenuPoint = new Point(mouse.x, mouse.y);
 
     if (myState.isSelectDrag) {
@@ -1154,7 +1195,6 @@ function CanvasState(canvas) {
 
     myState.dragging = false;
     var mySel = null;
-    console.log(myState.selections.length);
 
     // store in each selected shape offset from mouse coordinates
     for (var i = myState.selections.length-1; i >= 0; i--) {
@@ -1227,8 +1267,6 @@ function CanvasState(canvas) {
       myState.selections[i].hideBtns();
       myState.valid = false; // Need to clear the old selection border
     }
-
-    console.log(myState.selections.length);
 
     if (myState.selections.length>0) return;
     
@@ -1336,7 +1374,6 @@ function CanvasState(canvas) {
 
 
   window.addEventListener('keydown', function(e) {
-    console.log(e);
     switch (e.keyCode) {
       case 46:
         if (e.shiftKey) {
@@ -1362,8 +1399,6 @@ function CanvasState(canvas) {
 
   
   canvas.addEventListener('mouseup', function(e) {
-    
-    console.log('mouseup');  
     myState.dragging = false;
     myState.isResizeDrag = false;
     myState.expectResize = -1;    
@@ -1385,7 +1420,6 @@ function CanvasState(canvas) {
       	      myState.isLinkDrag = false;
       	      myState.expectLink = -1;  
       	      myState.valid = false;
-      	      console.log(myState);
           	}
           }
         }
@@ -1401,7 +1435,6 @@ function CanvasState(canvas) {
       	    myState.isLinkDrag = false;
       	    myState.expectLink = -1;  
       	    myState.valid = false;
-      	    console.log(myState);
       	    return;
       	  }
       	}
@@ -1680,10 +1713,6 @@ CanvasState.prototype.draw = function() {
     var lines = this.lines;
     this.clear();
     
-    // ** Add stuff you want drawn in the background all the time here **
-    this.grid.draw(ctx);
-    
-
     // draw all shapes
     var l = shapes.length;
     for (var i = 0; i < l; i++) {
@@ -1729,10 +1758,8 @@ CanvasState.prototype.draw = function() {
           mySel.drawLinks(ctx);
       }
     }
-      
-    
-    
-        // draw lines
+
+    // draw lines
     var l = lines.length;
     for (var i = 0; i < l; i++) {
       var line = lines[i];
@@ -1743,10 +1770,7 @@ CanvasState.prototype.draw = function() {
     if (this.selectFrame != null ) {
       this.selectFrame.draw(ctx);
     }
-      
 
-
-    
     // ** Add stuff you want drawn on top all the time here **
     this.valid = true;
   }
@@ -1790,36 +1814,13 @@ function isInt(x) {
    return !isNaN(y) && x == y && x.toString() == y.toString();
 }
 
-
-/* global values */
-execFunctions = {
-  'httpCode':'Get http response code from url',
-  'apiObjectExists':'API Object exists for url',
-  'mailTo':'Send a mail to'
-};
-
-propertiesTypes = {
-	  'className':'className',
-	  'x':'int',
-	  'y':'int',
-	  'w':'int',
-	  'h':'int',
-	  'label':'string',
- 	  'description':'string',
-	  'execFunction':'string',
-	  'parameter':'string', 
-	  'trueOnLeft':'boolean',
-	  'gridsize':'int',
-	  'gridsnap':'boolean',
-	  'autosize':'boolean'
-};
+function callbackEvent(e) {
+  showPropertyEditor(e);
+}
 
 
 function showPropertyEditor(obj) {
-    console.log('showdetail:', obj);
-	  
     $('#propGrid').jqPropertyGrid(obj.persistant(), theMeta, function(property, value) {
-    	console.log(propertiesTypes[property]);
   		if (propertiesTypes[property]=='className') {
     	  s.tranform(obj, value);
   		} else if (propertiesTypes[property]=='int') {
@@ -1832,7 +1833,6 @@ function showPropertyEditor(obj) {
 	  			obj['set'+property](value);
 	  		} else 
 	  		  obj[property]=value;
-	  		console.log(obj);
       } else if (propertiesTypes[property]=='string') {
 	      obj[property]=value;
 	    }
@@ -1840,11 +1840,8 @@ function showPropertyEditor(obj) {
    	});
 }
 
-function callbackEvent(e) {
-  showPropertyEditor(e);
-}
 
-var s;
+
 
 function setGrid() {
   if (s.grid.active) {
@@ -1859,10 +1856,13 @@ function setGrid() {
 }
 
 function init() {
+  // init main canvas
   s = new CanvasState(document.getElementById('canvas1'));
 
+  // grid setup
   setGrid();
 
+  // create shapes (for example)
   var begin = new Circle(s,280,5,40,40,'start');
   s.addShape(begin); 
 
@@ -1872,8 +1872,6 @@ function init() {
   var answerNo = new Box(s,50,200,160,90,'Answer is No \n so do ...',globalColor);
   s.addShape(answerNo);
 
-
-
   // Lets make some partially transparent
   var asq2 = new Diamond(s,220,330,160,90,'Another test\nwith a newline\nand another one',globalColor);
   s.addShape(asq2);
@@ -1881,16 +1879,11 @@ function init() {
   var asq = new Diamond(s,220,70,160,90,'1st question\n so what ?',globalColor);
   s.addShape(asq);
 
-  
-  
   var doc = new Doc(s,420,200,160,100,'one',globalColor);
   s.addShape(doc);
 
-  
   // add lines between shapes
-
   s.addLine(new Line(asq,4, answerYes));
-
   s.addLine(new Line(answerNo,3, answerNo));
   s.addLine(new Line(begin,6, asq));
   s.addLine(new Line(asq,3, answerNo));
@@ -1902,44 +1895,9 @@ function init() {
   showPropertyEditor(s);
 }
 
-var menu = [{
-        name: 'create',
-        img: 'images/create.png',
-        title: 'Create shape',
-		    subMenu: [{
-        	'name': 'Question',
-        	fun: function () {
-        		  s.addShape(new Diamond(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90,'', globalColor));
-        	 }
-        	},{
-        	'name': 'Action',
-        	fun: function () {
-        		  s.addShape(new Box(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90,'', globalColor));
-        	  }
-        	},{
-        	'name': 'Document',
-        	fun: function () {
-        		  s.addShape(new Doc(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90,'', globalColor));
-        	  }
-        	}
-        ]
-    }, {
-        name: 'delete',
-        img: 'images/delete.png',
-        title: 'Delete shape',
-        fun: function () {
-        	s.deleteSelection();
-        }
-    }, {
-        name: 'download',
-        img: 'images/saveimage.png',
-        title: 'Download as image',
-        fun: function () {
-        	s.download();
-        }
-    }];
-
-
+/*
+init Property editor on ready
+ */
   $(function() {
   	$('#canvas1').contextMenu(menu, {
   	    triggerOn: 'contextmenu',
