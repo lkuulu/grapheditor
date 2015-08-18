@@ -115,11 +115,11 @@ function cbval(e, a, b, c, d) {
 			            },
 
 */
-			x: { group: 'Shape', name: 'x', type: 'number', options: { min: 0, step: 1, stop:function(e,ui){update(e.target.dataset.name, e.target.value);}}},
-			y: { group: 'Shape', name: 'y', type: 'number', options: { min: 0, step: 1, stop:function(e,ui){update(e.target.dataset.name, e.target.value);} }},
-			w: { group: 'Shape', name: 'w', type: 'number', options: { min: 0, step: 1, stop:function(e,ui){update(e.target.dataset.name, e.target.value);} }},
-			h: { group: 'Shape', name: 'h', type: 'number', options: { min: 0, step: 1, stop:function(e,ui){update(e.target.dataset.name, e.target.value);} }},
-			gridsize: { group: 'Shape', name: 'grid-size', type: 'number', options: { min: 2, max: 50, step: 2, stop:function(e,ui){update(e.target.dataset.name, e.target.value);}}},
+			x: { group: 'Shape', name: 'x', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);}}},
+			y: { group: 'Shape', name: 'y', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);} }},
+			w: { group: 'Shape', name: 'w', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);} }},
+			h: { group: 'Shape', name: 'h', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);} }},
+			gridsize: { group: 'Shape', name: 'grid-size', type: 'number', options: { min: 2, max: 50, step: 2, stop:function(e){update(e.target.dataset.name, e.target.value);}}},
 			gridsnap: {group: 'Shape', name: 'grid-snap', type: 'boolean', description: 'Objects snap to grid'},
 			autosize: {group: 'Shape', name: 'canvas auto size', type: 'boolean', description: 'Auto adjust canvas size'},
 			
