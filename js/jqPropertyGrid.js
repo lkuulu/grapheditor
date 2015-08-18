@@ -250,7 +250,6 @@ var update;
 		setTimeout(
 		  function() {
 			$( '#' + id ).on( event, function() {
-				console.log('initSpinner2');
 				update(name, $(this).val());
 			});
 		},50);
@@ -273,8 +272,6 @@ var update;
   	   function() {
   	   	   $('#'+id).on(event, function() {
   	   	      update(name, $(this).val());
-  	   	   	  console.log($(this).val(), name, value, options);   	
-  	   	   	  console.log($(this).is(':checked'));
   	   	   });
   	   },50);
   	 
@@ -294,7 +291,6 @@ var update;
   	   function() {
   	   	   $('#'+id).on(event, function() {
   	   	      update(name, $(this).is(':checked'));
-  	   	   	  console.log($(this).is(':checked'), name, value, options);   	
   	   	   });
   	   },50);
   	 
