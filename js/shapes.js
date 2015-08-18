@@ -1083,7 +1083,7 @@ function CanvasState(canvas) {
   this.description = '';
   this.parameter = '';
   this.gridsnap = true;
-  this.gridsize = 20;
+  this.gridsize = 10;
   this.autosize = false;
   
   this.ctx = canvas.getContext('2d');
