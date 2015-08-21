@@ -28,9 +28,9 @@
 // * - add property editor to change labels / links / (improved from jqPropertyGrid)
 // * - add multi-select shapes with a mouse surround
 // * - add select/deselect shapes with a keyboard trick (Ctrl+click)
+// * - keyboard event to callback events (move / delete)
 // * SOON :
 // * - add callback for rest storage/property editor/whatever
-// * - keyboard event to callback events (move / resize / delete)
 // ********************************************************************
 
 var s;
@@ -106,12 +106,12 @@ var menu = [{
   }
 }];
 
-/*
+
 function consolelog(logs) {
-    console.log(logs);
+//    console.log(logs);
 	document.getElementById('log').innerHTML=logs;
 }
-*/
+
 
 function Point(x, y) {
 	this.x=x;
@@ -288,11 +288,11 @@ Line.prototype.doPath = function(ctx) {
   
   this.destinationHandle = 1;
   this.setDestCoord();
-
   if (this.origineHandle==3) {
      // start headache
-     if ((this.dy<this.oy) && (this.dx>this.origin.x) && (this.dx<this.origin.x+this.origin.w) ) {
-        ix.push( this.ox, 
+
+     if ((this.dy<this.oy) && (this.destination.x+this.destination.w>this.origin.x-this.margin) ) { //(this.dx<this.origin.x+this.origin.w) ) {
+        ix.push( this.ox,
                  Math.min(this.origin.x,this.destination.x)-this.margin, 
                  Math.min(this.origin.x,this.destination.x)-this.margin,
                  this.dx);
@@ -304,23 +304,31 @@ Line.prototype.doPath = function(ctx) {
          	// |-----| 
          	//     [ D ]
          	ix.push(this.ox-this.margin, this.ox-this.margin, this.dx);
-         	iy.push(this.oy, this.dy-(this.dy-(this.origin.y+this.origin.h))/2, this.dy-(this.dy-(this.origin.y+this.origin.h))/2);
+
+         iy.push(this.oy, this.dy-this.margin,this.dy-this.margin);
+         	//iy.push(this.oy, this.dy-(this.dy-(this.origin.y+this.origin.h))/2, this.dy-(this.dy-(this.origin.y+this.origin.h))/2);
         
        } else  {
-         	//         |---|
-         	// |-[ O ] | [ D ]
-         	// |-------|
-         	ix.push(this.ox-this.margin, this.ox-this.margin, this.origin.x+this.origin.w + ((this.destination.x-(this.origin.x+this.origin.w))/2), this.origin.x+this.origin.w + ((this.destination.x-(this.origin.x+this.origin.w))/2), this.dx);
-         	iy.push(this.oy, this.origin.y+this.origin.h+this.margin, this.origin.y+this.origin.h+this.margin, this.destination.y-this.margin, this.destination.y-this.margin);
+         //         |---|
+         // |-[ O ] | [ D ]
+         // |-------|
+         //ix.push(this.ox-this.margin, this.ox-this.margin, this.origin.x+this.origin.w + ((this.destination.x-(this.origin.x+this.origin.w))/2), this.origin.x+this.origin.w + ((this.destination.x-(this.origin.x+this.origin.w))/2), this.dx);
+         //iy.push(this.oy, this.origin.y+this.origin.h+this.margin, this.origin.y+this.origin.h+this.margin, this.destination.y-this.margin, this.destination.y-this.margin);
+
+         // new option = less cross
+         // |-----------|
+         // |-[ O ]   [ D ]
+         ix.push(Math.min(this.ox-this.margin, this.destination.x-this.margin), Math.min(this.ox-this.margin, this.destination.x-this.margin), this.dx);
+         iy.push(this.oy, this.destination.y-this.margin, this.destination.y-this.margin);
        }
-     } else { 
-         if (this.dy > this.oy) {
-          //         |-[ O ]
-         	//         |   
-         	//       [ D ]
-         	ix.push(this.dx);
-         	iy.push(this.oy);
-         } else {
+     } else {
+       if (this.dy > this.oy) {
+         //         |-[ O ]
+         //         |
+         //       [ D ]
+         ix.push(this.dx);
+       	 iy.push(this.oy);
+       } else {
 
            //     |---|
            //   [ D ] |-[ O ]
@@ -369,7 +377,9 @@ Line.prototype.doPath = function(ctx) {
        	//          |---|
        	//        [ D ]
        	ix.push(this.ox+this.margin, this.ox+this.margin, this.dx);
-       	iy.push(this.oy,this.dy-(this.dy-(this.origin.y+this.origin.h))/2,this.dy-(this.dy-(this.origin.y+this.origin.h))/2);
+         iy.push(this.oy,this.dy-this.margin,this.dy-this.margin);
+       	//iy.push(this.oy,this.dy-(this.dy-(this.origin.y+this.origin.h))/2,this.dy-(this.dy-(this.origin.y+this.origin.h))/2);
+
        } else {
          if (((this.dy<=this.origin.y) ||(this.dx>=this.origin.x && this.dx<=this.origin.x+this.origin.w)) 
             && (this.oy>this.destination.y+this.destination.h+this.margin)) {
@@ -398,7 +408,8 @@ Line.prototype.doPath = function(ctx) {
        //     |-| 
        //     [ D ]
        ix.push(this.ox, this.dx);
-     	 iy.push(this.dy-(this.dy-(this.origin.y+this.origin.h))/2, this.dy-(this.dy-(this.origin.y+this.origin.h))/2);
+       iy.push(this.dy-this.margin, this.dy-this.margin);
+       //iy.push(this.dy-(this.dy-(this.origin.y+this.origin.h))/2, this.dy-(this.dy-(this.origin.y+this.origin.h))/2);
      } else { 
          // should I have to turn around object
          if ((this.dx>this.origin.x) && (this.dx<this.origin.x+this.origin.w)) { 
@@ -1284,7 +1295,8 @@ function CanvasState(canvas) {
     var mx = mouse.x;
     var my = mouse.y;
 
-      if (myState.dragging){
+    //console.log('dragging', myState.dragging, 'isSelectDrag(', myState.isSelectDrag ,',',myState.expectResize,') isResizeDrag', myState.isResizeDrag ,'isLinkDrag', myState.isLinkDrag );
+    if (myState.dragging){
       // We don't want to drag the object by its top-left corner, we want to drag it
       // from where we clicked. Thats why we saved the offset and use it here
       for (var i=0; i<myState.selections.length; i++) {
@@ -1305,7 +1317,7 @@ function CanvasState(canvas) {
       
     } else 
     if (myState.isResizeDrag) {
-      myState.selection.resize(myState.expectResize, myState.grid.nearest(mx), myState.grid.nearest(my));
+      myState.selections[0].resize(myState.expectResize, myState.grid.nearest(mx), myState.grid.nearest(my));
       myState.valid = false;
     } else 
     if (myState.isLinkDrag) {
@@ -1352,14 +1364,12 @@ function CanvasState(canvas) {
 
       // cursor on link delete
       for (var i=myState.lines.length-1; i>=0; i--) {
-      	if (myState.lines[i].destination==myState.selections[myState.selections.length-1] || myState.lines[i].origin==myState.selection) {
           if (myState.lines[i].setCursor(myState, mx, my)) {
             myState.expectDelLine = i;
           }
 		      // in selection, exit
 		      if (myState.expectDelLine!=-1) return;
 		    }
-	    }
 		  // not over a selection box, return to normal
 		  myState.isDel = false;
 		  myState.expectDelLine = -1;
@@ -1374,10 +1384,17 @@ function CanvasState(canvas) {
 
 
   window.addEventListener('keydown', function(e) {
+    console.log(e.keyCode);
     switch (e.keyCode) {
       case 46:
         if (e.shiftKey) {
           s.deleteSelection()
+        }
+        break;
+      case 65: // a
+        if (e.ctrlKey) {
+          s.selectAll();
+          e.preventDefault();
         }
         break;
       case 37: // <-
@@ -1499,6 +1516,16 @@ CanvasState.prototype.persistant = function() {
            'gridsnap' : this.grid.snap,
            'autosize' : this.autosize
   	     };
+};
+
+CanvasState.prototype.selectAll = function () {
+  for (var i=0; i<this.shapes.length; i++) {
+    var pos=this.selections.indexOf(this.shapes[i]);
+    if (pos==-1) {
+      this.selections.push(this.shapes[i]);
+    }
+  }
+  this.valid = false;
 };
 
 CanvasState.prototype.moveSelection = function(dir, offset) {
@@ -1856,7 +1883,7 @@ function init() {
 
   // create shapes (for example)
   var begin = new Circle(s,280,5,40,40,'start');
-  s.addShape(begin); 
+  s.addShape(begin);
 
   var answerYes = new Box(s,340,170,160,90,'Answer: Yes \n then do ...',globalColor);
   s.addShape(answerYes);
@@ -1865,7 +1892,7 @@ function init() {
   s.addShape(answerNo);
 
   // Lets make some partially transparent
-  var asq2 = new Diamond(s,220,330,160,90,'Another test\nwith a newline\nand another one',globalColor);
+  var asq2 = new Diamond(s,30,330,160,90,'Another test\nwith a newline\nand another one',globalColor);
   s.addShape(asq2);
 
   var asq = new Diamond(s,220,70,160,90,'1st question\n so what ?',globalColor);
@@ -1881,8 +1908,9 @@ function init() {
   s.addLine(new Line(asq,3, answerNo));
   s.addLine(new Line(answerNo,3, answerNo));
   s.addLine(new Line(answerNo,6, asq2));
+  s.addLine(new Line(asq2, 3, asq));
+
   s.addLine(new Line(asq,6, doc));
-  s.addLine(new Line(asq2, 4, asq));
 
   showPropertyEditor(s);
 }
