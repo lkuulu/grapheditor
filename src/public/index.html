@@ -105,12 +105,12 @@ function cbval(e, a, b, c, d) {
 			fontColor: { group: 'Editor', name: 'Font color', type: 'color', options: { preferredFormat: 'hex' }},
 			jQuery: { group: 'Plugins', description: 'Whether or not to include jQuery on the page' },
 			modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
-			framework: { name: 'Framework', 
-			             group: 'Plugins', 
-			             type: 'options', 
-			             options: [ 'None', 
+			framework: { name: 'Framework',
+			             group: 'Plugins',
+			             type: 'options',
+			             options: [ 'None',
 			                        {text:'AngularJS', value: 'angular'},
-			                        {text:'Backbone.js', value: 'backbone'}], 
+			                        {text:'Backbone.js', value: 'backbone'}],
 			             description: 'Whether to include any additional framework'
 			            },
 
@@ -122,26 +122,26 @@ function cbval(e, a, b, c, d) {
 			gridsize: { group: 'Shape', name: 'grid-size', type: 'number', options: { min: 2, max: 50, step: 2, stop:function(e){update(e.target.dataset.name, e.target.value);}}},
 			gridsnap: {group: 'Shape', name: 'grid-snap', type: 'boolean', description: 'Objects snap to grid'},
 			autosize: {group: 'Shape', name: 'canvas auto size', type: 'boolean', description: 'Auto adjust canvas size'},
-			
+			onlydeletechildren: {group: 'Shape', name: 'children link only', type: 'boolean', description: 'can only delete children link'},
 			label: { group: 'Shape', name: 'label', type: 'textarea', description: 'Shape label'},
 			description: { group: 'Shape', name: 'Description', type: 'textarea'},
-			className: { name:'Type', 
-			              group: 'Shape', 
+			className: { name:'Type',
+			              group: 'Shape',
 			              type:'options',
 			              options:[ {text:'Action', value:'Box'},
 			                        {text:'Question', value:'Diamond'},
 			                        {text:'Document', value:'Doc'}],
-			              description: 'Kind of shape' 
+			              description: 'Kind of shape'
 			             },
-			execFunction: { name:'Execute', 
-			              group: 'Function', 
+			execFunction: { name:'Execute',
+			              group: 'Function',
 			              type:'options',
 			              options:[ 'none',{text:'Get http response code from url', value:'httpCode'},
 			                        {text:'API Object exists for url', value:'apiObjectExists'},
 			                        {text:'Send a mail to', value:'mailTo'}],
-			              description: 'Action at this step' 
+			              description: 'Action at this step'
 			             },
-      parameter: { group: 'Function', name: 'Parameters'},
+      		parameter: { group: 'Function', name: 'Parameters'},
 			trueOnLeft: {group: 'Shape', type: 'boolean', description: 'True link is on the left'}
 		};
 

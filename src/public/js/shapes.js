@@ -33,7 +33,7 @@
 // * - add callback for rest storage/property editor/whatever
 // ********************************************************************
 
-var s;
+let s;
 
 // 0  1  2
 // 3     4
@@ -45,12 +45,18 @@ const HANDLE = {
     BOTTOM: 6
 };
 
-var globalColor = 'rgba(224, 236, 255, 0.8)';
-var canvasMargin = 20;
-var oneStep = 1;
-var onePage = 20;
+const SEL_COLOR = '#95B8E7';
+const RED_COLOR = '#CC5151';
 
-var direction = {
+const deleteButtonPosYUpper = 0;
+const deleteButtonRay = 10;
+
+let globalColor = 'rgba(224, 236, 255, 0.8)';
+let canvasMargin = 20;
+let oneStep = 1;
+let onePage = 20;
+
+let direction = {
     'toLeft': 0,
     'toTop': 1,
     'toRight': 2,
@@ -77,10 +83,11 @@ propertiesTypes = {
     'trueOnLeft': 'boolean',
     'gridsize': 'int',
     'gridsnap': 'boolean',
-    'autosize': 'boolean'
+    'autosize': 'boolean',
+    'onlydeletechildren': 'boolean'
 };
 
-var menu = [{
+let menu = [{
     name: 'create',
     img: 'images/create.png',
     title: 'Create shape',
@@ -116,12 +123,12 @@ var menu = [{
     }
 }];
 
-
+/*
 function consolelog(logs) {
 //    console.log(logs);
     document.getElementById('log').innerHTML = logs;
 }
-
+*/
 
 function Point(x, y) {
     this.x = x;
@@ -178,8 +185,10 @@ function Line(origin, origineHandle, destination) {
 
     this.showBtn = false;
 
-    this.margin = 15;
+    this.margin = 30;
     this.arrowSize = 8;
+
+    this.delButton = {x:0, y:0}
 }
 
 Line.prototype.destroy = function () {
@@ -212,48 +221,48 @@ Line.prototype.setDestCoord = function () {
 Line.prototype.draw = function (ctx) {
     ctx.lineWidth = 2;
     if (this.showBtn) {
-        ctx.strokeStyle = '#95B8E7'; //'#aa0000';
+        ctx.strokeStyle = RED_COLOR; //'#aa0000';
     } else {
         ctx.strokeStyle = '#8c8c8c';
     }
     this.doPath(ctx);
     ctx.stroke();
 
-    //ctx.closePath();
     if (this.showBtn) {
         ctx.beginPath();
-        ctx.strokeStyle = '#3c3c3c';
-        ctx.moveTo(this.dx + 5, this.dy - 15);
-        var radius = 5;
-        var radians = (Math.PI / 180) * 380;
-        ctx.lineWidth = 1;
-        ctx.arc(this.dx, this.dy - 15, radius, 0, radians, false);
+        ctx.strokeStyle = RED_COLOR; //'#3c3c3c';
+        ctx.moveTo(this.delButton.x + deleteButtonRay, this.delButton.y - deleteButtonPosYUpper);
+        let radius = deleteButtonRay;
+        let radians = (Math.PI / 180) * 380;
+        ctx.lineWidth = 2;
+        ctx.arc(this.delButton.x, this.delButton.y - deleteButtonPosYUpper, radius, 0, radians, false);
         ctx.fillStyle = 'white';
         ctx.fill();
         ctx.stroke();
 
-        ctx.font = '11pt Calibri';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = 'black';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('-', this.dx, this.dy - 15);
-        //ctx.closePath();
+        ctx.beginPath();
+        ctx.lineWidth = 4;
+        ctx.moveTo(this.delButton.x + deleteButtonRay - 4, this.delButton.y - deleteButtonPosYUpper );
+        ctx.lineTo(this.delButton.x - deleteButtonRay + 4, this.delButton.y - deleteButtonPosYUpper )
+        ctx.stroke();
     }
 };
 
 Line.prototype.contains = function (mx, my) {
     // All we have to do is make sure the Mouse X,Y fall in the area between
-    // the shape's X and (X + Width) and its Y and (Y + Height)
-    return (this.destination.x + (this.destination.w / 2) - 5 <= mx) && (this.destination.x + (this.destination.w / 2) + 5 >= mx) &&
-        (this.destination.y - 20 <= my) && (this.destination.y - 10 >= my);
+    return (this.delButton.x - deleteButtonRay <= mx) && (this.delButton.x + deleteButtonRay >= mx) &&
+        (this.delButton.y - deleteButtonRay <= my) && (this.delButton.y + deleteButtonRay >= my);
+
 };
 
 // Set cursor if over an handle
 Line.prototype.setCursor = function (container, mx, my) {
     if (this.contains(mx, my)) {
         container.canvas.style.cursor = 'pointer';
+        container.canvas.title = 'Delete link';
         return true;
     }
+    container.canvas.title = '';
     return false;
 };
 
@@ -271,6 +280,7 @@ Line.prototype.doPath = function (ctx) {
     //    1
     // 3     4
     //    6
+    let DelBtnPos={x:0,y:0};
     switch (this.origineHandle) {
         case HANDLE.TOP:
             this.ox = this.origin.x + (this.origin.w / 2);
@@ -290,28 +300,25 @@ Line.prototype.doPath = function (ctx) {
             break;
     }
 
-    var ix = [];
-    var iy = [];
+    let ix = [];
+    let iy = [];
 
     this.destinationHandle = HANDLE.TOP;
     this.setDestCoord();
-    if (this.origineHandle == HANDLE.LEFT) {
+    if (this.origineHandle === HANDLE.LEFT) {
         // start headache
-
         if ((this.dy < this.oy) && (this.destination.x + this.destination.w > this.origin.x - this.margin)) { //(this.dx<this.origin.x+this.origin.w) ) {
             ix.push(this.ox,
                 Math.min(this.origin.x, this.destination.x) - this.margin,
                 Math.min(this.origin.x, this.destination.x) - this.margin,
                 this.dx);
             iy.push(this.oy, this.oy, this.destination.y - this.margin, this.destination.y - this.margin);
-
         } else if (this.dx > this.ox - this.margin) { // && (!(this.ox>this.destination.x && this.ox<this.destination.x+this.destination.w))) {
             if (this.dy > this.origin.y + this.origin.h) {
                 // |-[ O ]
                 // |-----|
                 //     [ D ]
                 ix.push(this.ox - this.margin, this.ox - this.margin, this.dx);
-
                 iy.push(this.oy, this.dy - this.margin, this.dy - this.margin);
                 //iy.push(this.oy, this.dy-(this.dy-(this.origin.y+this.origin.h))/2, this.dy-(this.dy-(this.origin.y+this.origin.h))/2);
 
@@ -345,7 +352,7 @@ Line.prototype.doPath = function (ctx) {
 
             }
         }
-    } else if (this.origineHandle == HANDLE.RIGHT) {
+    } else if (this.origineHandle === HANDLE.RIGHT) {
         if ((this.dx > this.ox)) {
             if (this.dy > this.oy) {
                 // [  ]--|
@@ -357,7 +364,7 @@ Line.prototype.doPath = function (ctx) {
             } else {
                 if (this.destination.x < this.ox + this.margin) {
                     ix.push(Math.max(this.destination.x + this.destination.w, this.ox) + this.margin,
-                        Math.max(this.destination.x + this.destination.w, this.ox) + this.margin,
+                            Math.max(this.destination.x + this.destination.w, this.ox) + this.margin,
                         this.dx);
                     iy.push(this.oy, this.dy - this.margin, this.dy - this.margin);
                 } else {
@@ -406,7 +413,7 @@ Line.prototype.doPath = function (ctx) {
                 }
             }
         }
-    } else if (this.origineHandle == HANDLE.BOTTOM) {
+    } else if (this.origineHandle === HANDLE.BOTTOM) {
         // D is right to O
         if (this.dy > this.oy) {
             //   [ O ]
@@ -436,8 +443,36 @@ Line.prototype.doPath = function (ctx) {
     // draw Line Path
     ctx.beginPath();
     ctx.moveTo(this.ox, this.oy);
-    for (var i = 0; i < ix.length; i++) {
-        ctx.lineTo(ix[i], iy[i]);
+
+    // print line && define del button on the line
+    let max=-1;
+    ix= [ this.ox,...ix.slice(0)];
+    iy= [ this.oy,...iy.slice(0)];
+    for (let i = 0; i < ix.length; i++) {
+        if (i<ix.length-1) {
+            if (Math.abs(ix[i+1] - ix[i]) > max) {
+                if (ix[i+1] > ix[i]) {
+                    DelBtnPos = { x:ix[i] + (ix[i+1]-ix[i]) /2, y:iy[i] };
+                    max = ix[i+1]-ix[i];
+                } else {
+                    DelBtnPos = { x:ix[i+1] + (ix[i]-ix[i+1]) /2, y:iy[i] };
+                    max = ix[i]-ix[i+1];
+                }
+            }
+            if (Math.abs(iy[i+1] - iy[i]) > max) {
+                if (iy[i+1] > iy[i]) {
+                    DelBtnPos = { x:ix[i] ,y:iy[i] + (iy[i+1]-iy[i]) /2};
+                    max = iy[i+1]-iy[i];
+                } else {
+                    DelBtnPos = { x:ix[i+1] ,y:iy[i+1] + (iy[i]-iy[i+1]) /2};
+                    max = iy[i]-iy[i+1];
+                }
+            }
+        }
+        if (i>0) {
+            // first plot is not necessary
+            ctx.lineTo(ix[i], iy[i]);
+        }
     }
 
 
@@ -447,6 +482,8 @@ Line.prototype.doPath = function (ctx) {
     ctx.lineTo(this.dx + (this.arrowSize / 2), this.dy - this.arrowSize);
     ctx.lineTo(this.dx, this.dy - this.arrowSize);
     ctx.lineTo(this.dx, this.dy - this.arrowSize);
+    this.delButton = DelBtnPos;
+    return DelBtnPos
 
 };
 
@@ -478,7 +515,7 @@ function Shape(parent, x, y, w, h, label, fill) {
 }
 
 Shape.prototype.destroy = function () {
-    for (var i = this.lines.length - 1; i >= 0; i--) {
+    for (let i = this.lines.length - 1; i >= 0; i--) {
         if (i < this.lines.length)
             this.lines[i].destroy();
         //this.lines.splice(i, 1);
@@ -486,7 +523,7 @@ Shape.prototype.destroy = function () {
 };
 
 Shape.prototype.delLine = function (line) {
-    var index = this.parent.lines.indexOf(line);
+    let index = this.parent.lines.indexOf(line);
     if (index > -1) {
         //this.lines[index].destroy();
         this.parent.lines.splice(index, 1);
@@ -503,16 +540,16 @@ Shape.prototype.addLine = function (line) {
 };
 
 Shape.prototype.drawLabel = function (ctx) {
-    var lineheight = 13;
+    let lineheight = 13;
     ctx.font = this.font;
     ctx.textAlign = this.textAlign;
     ctx.fillStyle = this.fillStyle;
     ctx.textBaseline = 'middle';
 
 
-    var lines = this.label.split('\n');
+    let lines = this.label.split('\n');
 
-    for (var i = 0; i < lines.length; i++)
+    for (let i = 0; i < lines.length; i++)
         ctx.fillText(lines[i], this.x + this.w / 2, this.y + this.h / 2 - (lineheight * (lines.length - 1) / 2) + (i * lineheight));
 };
 
@@ -540,54 +577,52 @@ Shape.prototype.contains = function (mx, my) {
 
 function Linkable(parent, x, y, w, h, label, fill) {
     this.selectionLinks = [];
-    this.myLinkBoxColor = '#95B8E7'; //'darkred'; // New for selection boxes
+    this.myLinkBoxColor = '#55B8E7'; //'darkred'; // New for selection boxes
     this.myLinkBoxSize = 8;
-    this.limit = 25;
+   // this.limit = 25;
     this.parent = parent;
 
     this.base = Shape;
     this.base(parent, x, y, w, h, label, fill);
 
-    for (var i = 0; i < 3; i++) {
-        var link = new Handle;
+    for (let i = 0; i < 3; i++) {
+        let link = new Handle;
         this.selectionLinks.push(link);
     }
 }
 
 Linkable.prototype = new Shape;
 
-
 Linkable.prototype.drawLinks = function (ctx) {
     // draw the boxes
-    var half = this.myLinkBoxSize / 2;
+    let half = this.myLinkBoxSize / 2;
 
     // 0     2
     //    1
     //middle left
-    this.selectionLinks[0].x = this.x - 8 - half;
+    this.selectionLinks[0].x = this.x - this.myLinkBoxSize - half;
     this.selectionLinks[0].y = this.y + this.h / 2 - half;
 
     //middle right
-    this.selectionLinks[2].x = this.x + this.w + 8 - half;
+    this.selectionLinks[2].x = this.x + this.w + this.myLinkBoxSize - half;
     this.selectionLinks[2].y = this.y + this.h / 2 - half;
 
     this.selectionLinks[1].x = this.x + this.w / 2 - half;
-    this.selectionLinks[1].y = this.y + this.h - half + 8;
-
+    this.selectionLinks[1].y = this.y + this.h - half + this.myLinkBoxSize;
 
     ctx.fillStyle = this.myLinkBoxColor;
-    for (var i = 0; i < this.selectionLinks.length; i++) {
-        var cur = this.selectionLinks[i];
+    for (let i = 0; i < this.selectionLinks.length; i++) {
+        let cur = this.selectionLinks[i];
         ctx.fillRect(cur.x, cur.y, this.myLinkBoxSize, this.myLinkBoxSize);
     }
 
-    for (var i = 0; i < this.lines.length; i++) {
-        this.lines[i].showBtn = true;
+    for (let i = 0; i < this.lines.length; i++) {
+        this.lines[i].showBtn =  this.parent.onlydeletechildren ? (this.lines[i].origin === this) : true;
     }
 };
 
 Linkable.prototype.hideBtns = function () {
-    for (var i = 0; i < this.lines.length; i++) {
+    for (let i = 0; i < this.lines.length; i++) {
         this.lines[i].showBtn = false;
     }
 
@@ -595,15 +630,15 @@ Linkable.prototype.hideBtns = function () {
 
 // Set cursor if over an handle
 Linkable.prototype.setLinkCursor = function (container, mx, my) {
-    var foundIndex = -1;
-    for (var i = 0; i < this.selectionLinks.length; i++) {
+    let foundIndex = -1;
+    for (let i = 0; i < this.selectionLinks.length; i++) {
         // 0  1  2
         // 3     4
         // 5  6  7
         if (this.selectionLinks[i].contains(mx, my)) {
             // we found one!
             foundIndex = i;
-            container.canvas.style.cursor = 'pointer';
+            container.canvas.style.cursor = 'copy'; //'pointer';
         }
     }
     return foundIndex;
@@ -621,7 +656,7 @@ function Handleable(parent, x, y, w, h, label, fill) {
     // 3     4
     // 5  6  7
     this.selectionHandles = [];
-    this.mySelBoxColor = '#95B8E7'; //'darkred'; // New for selection boxes
+    this.mySelBoxColor = SEL_COLOR; //'darkred'; // New for selection boxes
     this.mySelBoxSize = 6;
     this.limit = 25;
     this.parent = parent;
@@ -631,8 +666,8 @@ function Handleable(parent, x, y, w, h, label, fill) {
     this.base(parent, x, y, w, h, label, fill);
 
     // set up the selection handle boxes
-    for (var i = 0; i < 8; i++) {
-        var handle = new Handle;
+    for (let i = 0; i < 8; i++) {
+        let handle = new Handle;
         this.selectionHandles.push(handle);
     }
 }
@@ -642,8 +677,8 @@ Handleable.prototype = new Linkable; //Shape;
 // This object can be resize with a call from main loop => mousedown && over an handle && mouseMove
 Handleable.prototype.resize = function (handleIndex, mx, my) {
     // Hold some values
-    var oldx = this.x;
-    var oldy = this.y;
+    let oldx = this.x;
+    let oldy = this.y;
 
     // remember handles order & position
     // 0  1  2
@@ -702,7 +737,7 @@ Handleable.prototype.resize = function (handleIndex, mx, my) {
 // Drawing handles
 Handleable.prototype.drawHandles = function (ctx) {
     // draw the boxes
-    var half = this.mySelBoxSize / 2;
+    let half = this.mySelBoxSize / 2;
 
     // 0  1  2
     // 3     4
@@ -737,16 +772,16 @@ Handleable.prototype.drawHandles = function (ctx) {
 
 
     ctx.fillStyle = this.mySelBoxColor;
-    for (var i = 0; i < 8; i++) {
-        var cur = this.selectionHandles[i];
+    for (let i = 0; i < 8; i++) {
+        let cur = this.selectionHandles[i];
         ctx.fillRect(cur.x, cur.y, this.mySelBoxSize, this.mySelBoxSize);
     }
 };
 
 // Set cursor if over an handle
 Handleable.prototype.setCursor = function (container, mx, my) {
-    var foundIndex = -1;
-    for (var i = 0; i < 8; i++) {
+    let foundIndex = -1;
+    for (let i = 0; i < 8; i++) {
         // 0  1  2
         // 3     4
         // 5  6  7
@@ -823,7 +858,7 @@ Circle.prototype.getName = function () {
 
 // what is a circle path
 Circle.prototype.doPath = function (ctx) {
-    var radians = (Math.PI / 180) * 380;
+    let radians = (Math.PI / 180) * 380;
     ctx.beginPath();
     ctx.arc(this.x + this.w / 2, this.y + this.h / 2, this.w / 2, 0, radians, false);
 };
@@ -899,7 +934,7 @@ Box.prototype.draw = function (ctx) {
 
     this.drawLabel(ctx);
 
-    ctx.strokeStyle = '#95B8E7';
+    ctx.strokeStyle = SEL_COLOR;
     ctx.lineWidth = 1;
     this.drawStroke(ctx);
 
@@ -950,7 +985,7 @@ Doc.prototype.getName = function () {
 };
 
 Doc.prototype.doPath = function (ctx) {
-    var dy = this.h;
+    let dy = this.h;
 
     ctx.beginPath();
     ctx.fillStyle = this.fill;
@@ -970,7 +1005,7 @@ Doc.prototype.draw = function (ctx) {
     ctx.fill();
 
 
-    ctx.strokeStyle = '#95B8E7';
+    ctx.strokeStyle = SEL_COLOR;
     ctx.lineWidth = 1;
     this.drawStroke(ctx);
     this.drawLabel(ctx);
@@ -1041,7 +1076,7 @@ Diamond.prototype.draw = function (ctx) {
 
 
     // border
-    ctx.strokeStyle = '#95B8E7';
+    ctx.strokeStyle = SEL_COLOR;
     ctx.lineWidth = 1;
     this.drawStroke(ctx);
 
@@ -1066,7 +1101,7 @@ Diamond.prototype.drawStroke = function (ctx) {
 function SimpleFrame(coord) {
     this.originCoord = coord;
     this.destinationCoord = null;
-    this.strokeStyle = '#95B8E7';
+    this.strokeStyle = SEL_COLOR;
     this.lineWidth = 1;
 }
 
@@ -1098,9 +1133,9 @@ function CanvasState(canvas) {
     this.label = '';
     this.description = '';
     this.parameter = '';
-    this.gridsnap = true;
     this.gridsize = 10;
     this.autosize = false;
+    this.onlydeletechildren = true;
 
     this.ctx = canvas.getContext('2d');
     // This complicates things a little but but fixes mouse co-ordinate problems
@@ -1117,7 +1152,7 @@ function CanvasState(canvas) {
     }
     // Some pages have fixed-position bars (like the stumbleupon bar) at the top or left of the page
     // They will mess up mouse coordinates and this fixes that
-    var html = document.body.parentNode;
+    let html = document.body.parentNode;
     this.htmlTop = html.offsetTop;
     this.htmlLeft = html.offsetLeft;
 
@@ -1153,9 +1188,9 @@ function CanvasState(canvas) {
         // 0  1  2
         // 3     4
         // 5  6  7
-        if (linkIndex == 0) return 3;
-        if (linkIndex == 1) return 6;
-        if (linkIndex == 2) return 4;
+        if (linkIndex === 0) return HANDLE.LEFT;
+        if (linkIndex === 1) return HANDLE.BOTTOM;
+        if (linkIndex === 2) return HANDLE.RIGHT;
         return linkIndex;
     }
 
@@ -1166,7 +1201,7 @@ function CanvasState(canvas) {
     // and when the events are fired on the canvas the variable "this" is going to mean the canvas!
     // Since we still want to use this particular CanvasState in the events we have to save a reference to it.
     // This is our reference!
-    var myState = this;
+    let myState = this;
 
     //fixes a problem where double clicking causes text to get selected on the canvas
     canvas.addEventListener('selectstart', function (e) {
@@ -1175,16 +1210,15 @@ function CanvasState(canvas) {
     }, false);
     // Up, down, and move are for dragging
     canvas.addEventListener('mousedown', function (e) {
-        var mouse = myState.getMouse(e);
-        var mx = mouse.x;
-        var my = mouse.y;
-        var shapes = myState.shapes;
-        var l = shapes.length;
+        let mouse = myState.getMouse(e);
+        let mx = mouse.x;
+        let my = mouse.y;
+        let shapes = myState.shapes;
+        let l = shapes.length;
 
         myState.lastCtxMenuPoint = new Point(mouse.x, mouse.y);
 
         if (myState.isSelectDrag) {
-
             myState.selections.length = 0;
             myState.isSelectDrag = false;
         }
@@ -1213,10 +1247,10 @@ function CanvasState(canvas) {
 
 
         myState.dragging = false;
-        var mySel = null;
+        let mySel = null;
 
         // store in each selected shape offset from mouse coordinates
-        for (var i = myState.selections.length - 1; i >= 0; i--) {
+        for (let i = myState.selections.length - 1; i >= 0; i--) {
             mySel = myState.selections[i];
             // Keep track of where in the object we clicked
             // so we can move it smoothly (see mousemove)
@@ -1233,7 +1267,7 @@ function CanvasState(canvas) {
         } else {
             if (!e.ctrlKey) {
                 // invalid btns
-                for (var i = myState.selections.length - 1; i >= 0; i--) {
+                for (let i = myState.selections.length - 1; i >= 0; i--) {
                     myState.selections[i].hideBtns();
                     myState.valid = false; // Need to clear the old selection border
                 }
@@ -1244,9 +1278,8 @@ function CanvasState(canvas) {
 
         // if no shape selected
         // check if mouse click is on a shape
-        if ((myState.selections.length == 0) || (e.ctrlKey)) {
-
-            for (var i = l - 1; i >= 0; i--) {
+        if ((myState.selections.length === 0) || (e.ctrlKey)) {
+            for (let i = l - 1; i >= 0; i--) {
                 if (shapes[i].contains(mx, my)) {
                     mySel = shapes[i];
                     // Keep track of where in the object we clicked
@@ -1256,8 +1289,8 @@ function CanvasState(canvas) {
                     myState.dragging = true;
 
                     //toggle Shape Selection
-                    var pos = myState.selections.indexOf(mySel);
-                    if (pos != -1) {
+                    let pos = myState.selections.indexOf(mySel);
+                    if (pos !== -1) {
                         // delete from selection = hidebtn
                         mySel.hideBtns();
                         myState.selections.splice(pos, 1);
@@ -1282,7 +1315,7 @@ function CanvasState(canvas) {
 
         // havent returned means we have failed to select anything.
         // If there was an object selected, we deselect it
-        for (var i = myState.selections.length - 1; i >= 0; i--) {
+        for (let i = myState.selections.length - 1; i >= 0; i--) {
             myState.selections[i].hideBtns();
             myState.valid = false; // Need to clear the old selection border
         }
@@ -1296,17 +1329,16 @@ function CanvasState(canvas) {
 
     }, true);
 
-
     canvas.addEventListener('mousemove', function (e) {
-        var mouse = myState.getMouse(e);
-        var mx = mouse.x;
-        var my = mouse.y;
+        let mouse = myState.getMouse(e);
+        let mx = mouse.x;
+        let my = mouse.y;
 
         //console.log('dragging', myState.dragging, 'isSelectDrag(', myState.isSelectDrag ,',',myState.expectResize,') isResizeDrag', myState.isResizeDrag ,'isLinkDrag', myState.isLinkDrag );
         if (myState.dragging) {
             // We don't want to drag the object by its top-left corner, we want to drag it
-            // from where we clicked. Thats why we saved the offset and use it here
-            for (var i = 0; i < myState.selections.length; i++) {
+            // from where we clicked. That's why we saved the offset and use it here
+            for (let i = 0; i < myState.selections.length; i++) {
                 // calc offset for each selection
                 // snap to nearest x, y
                 myState.selections[i].x = myState.grid.nearest((mx - myState.selections[i].dragoffx));
@@ -1327,10 +1359,10 @@ function CanvasState(canvas) {
         } else if (myState.isLinkDrag) {
 
             //check if mouse over different shape of selection
-            for (var i = myState.shapes.length - 1; i >= 0; i--) {
+            for (let i = myState.shapes.length - 1; i >= 0; i--) {
                 if (myState.shapes[i].contains(mx, my)) {
-                    var upShape = myState.shapes[i];
-                    if (upShape != myState.selection) {
+                    let upShape = myState.shapes[i];
+                    if (upShape !== myState.selection) {
                         myState.canvas.style.cursor = 'copy';
                     }
                 }
@@ -1338,11 +1370,11 @@ function CanvasState(canvas) {
             myState.valid = false;
         } else
             // Implements cursor when over handles
-        if (myState.selections.length != 0 && !myState.isResizeDrag && typeof (myState.selections[myState.selections.length - 1]) != 'undefined') {
+        if (myState.selections.length !== 0 && !myState.isResizeDrag && typeof (myState.selections[myState.selections.length - 1]) != 'undefined') {
             if (typeof myState.selections[myState.selections.length - 1].drawHandles != "undefined") {
                 myState.expectResize = myState.selections[myState.selections.length - 1].setCursor(myState, mx, my);
                 // in selection, exit
-                if (myState.expectResize != -1) return;
+                if (myState.expectResize !== -1) return;
 
                 // not over a selection box, return to normal
                 myState.isResizeDrag = false;
@@ -1353,8 +1385,8 @@ function CanvasState(canvas) {
             if (typeof myState.selections[myState.selections.length - 1].drawLinks != "undefined") {
                 myState.expectLink = linkToHandleIndex(myState.selections[myState.selections.length - 1].setLinkCursor(myState, mx, my));
                 // in selection, exit
-                if (myState.expectLink != -1) myState.canvas.title = 'delete link';
-                if (myState.expectLink != -1) return;
+                if (myState.expectLink !== -1) myState.canvas.title = 'Create link:\nDrag to shape you want to link';
+                if (myState.expectLink !== -1) return;
 
                 // not over a selection box, return to normal
                 myState.canvas.title = '';
@@ -1367,20 +1399,18 @@ function CanvasState(canvas) {
             myState.expectDelLine = -1;
 
             // cursor on link delete
-            for (var i = myState.lines.length - 1; i >= 0; i--) {
+            for (let i = myState.lines.length - 1; i >= 0; i--) {
                 if (myState.lines[i].setCursor(myState, mx, my)) {
                     myState.expectDelLine = i;
                 }
                 // in selection, exit
-                if (myState.expectDelLine != -1) return;
+                if (myState.expectDelLine !== -1) return;
             }
             // not over a selection box, return to normal
             myState.isDel = false;
             myState.expectDelLine = -1;
             this.style.cursor = 'auto';
-
         }
-
 
         // end of implementing move over handles
     }, true);
@@ -1422,19 +1452,19 @@ function CanvasState(canvas) {
         myState.isResizeDrag = false;
         myState.expectResize = -1;
 
-        var mouse = myState.getMouse(e);
-        var mx = mouse.x;
-        var my = mouse.y;
+        let mouse = myState.getMouse(e);
+        let mx = mouse.x;
+        let my = mouse.y;
 
         if (myState.isLinkDrag) {
-            var upShape = null;
+            let upShape = null;
             // si le link est d�j� existant, on le supprime.
-            for (var i = myState.shapes.length - 1; i >= 0; i--) {
+            for (let i = myState.shapes.length - 1; i >= 0; i--) {
                 if (myState.shapes[i].contains(mx, my)) {
                     upShape = myState.shapes[i];
                     // count down to prevent curent line deletion changing array size
-                    for (var j = myState.lines.length - 1; j >= 0; j--) {
-                        if (myState.lines[j].origin == myState.selections[myState.selections.length - 1] && myState.lines[j].destination == myState.shapes[i]) {
+                    for (let j = myState.lines.length - 1; j >= 0; j--) {
+                        if (myState.lines[j].origin === myState.selections[myState.selections.length - 1] && myState.lines[j].destination === myState.shapes[i]) {
                             myState.deleteLine(myState.lines[j]);
                             myState.isLinkDrag = false;
                             myState.expectLink = -1;
@@ -1446,7 +1476,7 @@ function CanvasState(canvas) {
 
             if (myState.valid) {
                 // si on est sur un Link <> link en cours, on cr�er le link
-                for (var i = myState.shapes.length - 1; i >= 0; i--) {
+                for (let i = myState.shapes.length - 1; i >= 0; i--) {
                     if (myState.shapes[i].contains(mx, my)) {
                         upShape = myState.shapes[i];
 
@@ -1477,7 +1507,7 @@ function CanvasState(canvas) {
         myState.valid = false;
 
 
-        if (myState.selections.length == 1) {
+        if (myState.selections.length === 1) {
             callbackEvent(myState.selections[0]);
         } else {
             callbackEvent(myState);
@@ -1488,11 +1518,11 @@ function CanvasState(canvas) {
 
     // double click for making new shapes
     canvas.addEventListener('dblclick', function (e) {
-        var mouse = myState.getMouse(e);
+        let mouse = myState.getMouse(e);
         myState.lastCtxMenuPoint = new Point(mouse.x, mouse.y);
-        var updateObj = [{
+        let updateObj = [{
             name: 'delete',
-            disable: (myState.selections.length == 0)
+            disable: (myState.selections.length === 0)
         }];
         $('#canvas1')
             .contextMenu('update', updateObj)
@@ -1501,7 +1531,7 @@ function CanvasState(canvas) {
 
     // **** Options! ****
 
-    this.selectionColor = '#95B8E7'; //'#CC0000';
+    this.selectionColor = SEL_COLOR; //'#CC0000';
     this.selectionWidth = 2;
     this.interval = 30;
     setInterval(function () {
@@ -1518,14 +1548,15 @@ CanvasState.prototype.persistant = function () {
         'h': this.h,
         'gridsize': this.grid.size,
         'gridsnap': this.grid.snap,
-        'autosize': this.autosize
+        'autosize': this.autosize,
+        'onlydeletechildren': this.onlydeletechildren
     };
 };
 
 CanvasState.prototype.selectAll = function () {
-    for (var i = 0; i < this.shapes.length; i++) {
-        var pos = this.selections.indexOf(this.shapes[i]);
-        if (pos == -1) {
+    for (let i = 0; i < this.shapes.length; i++) {
+        let pos = this.selections.indexOf(this.shapes[i]);
+        if (pos === -1) {
             this.selections.push(this.shapes[i]);
         }
     }
@@ -1533,7 +1564,7 @@ CanvasState.prototype.selectAll = function () {
 };
 
 CanvasState.prototype.moveSelection = function (dir, offset) {
-    for (var i = 0; i < this.selections.length; i++) {
+    for (let i = 0; i < this.selections.length; i++) {
         switch (dir) {
             case direction.toLeft:
                 this.selections[i].x -= offset;
@@ -1555,16 +1586,16 @@ CanvasState.prototype.moveSelection = function (dir, offset) {
 
 CanvasState.prototype.tranform = function (sourceShape, destShapeClass) {
     // if sourceShape is not destShapeClass
-    if (sourceShape.className != destShapeClass && sourceShape.className != 'Circle') {
+    if (sourceShape.className !== destShapeClass && sourceShape.className !== 'Circle') {
         // create a new shape as destClass
         // get all properties label, x, y, w, h, ...
-        var newShape = new window[destShapeClass](this, sourceShape.x, sourceShape.y, sourceShape.w, sourceShape.h, sourceShape.label, globalColor);
+        let newShape = new window[destShapeClass](this, sourceShape.x, sourceShape.y, sourceShape.w, sourceShape.h, sourceShape.label, globalColor);
 
-        for (var i = 0; i < this.lines.length; i++) {
-            if (this.lines[i].origin == sourceShape) {
+        for (let i = 0; i < this.lines.length; i++) {
+            if (this.lines[i].origin === sourceShape) {
                 this.addLine(new Line(newShape, this.lines[i].origineHandle, this.lines[i].destination));
             }
-            if (this.lines[i].destination == sourceShape) {
+            if (this.lines[i].destination === sourceShape) {
                 this.addLine(new Line(this.lines[i].origin, this.lines[i].origineHandle, newShape));
             }
         }
@@ -1593,12 +1624,12 @@ CanvasState.prototype.updateSelections = function () {
     // for each shape add to array selections if frame contains shape
 
     // deselect all = hide all butns
-    for (var i = this.selections.length - 1; i >= 0; i--) {
+    for (let i = this.selections.length - 1; i >= 0; i--) {
         this.selections[i].hideBtns();
     }
 
     this.selections = [];
-    for (var i = this.shapes.length - 1; i >= 0; i--) {
+    for (let i = this.shapes.length - 1; i >= 0; i--) {
         if (this.shapes[i].isContained(this.selectFrame)) {
             this.selections.push(this.shapes[i]);
             this.valid = false;
@@ -1608,18 +1639,18 @@ CanvasState.prototype.updateSelections = function () {
 
 
 CanvasState.prototype.updMenu = function () {
-    var updateObj = [{
+    let updateObj = [{
         name: 'delete',
-        disable: (this.selections.length != 1)
+        disable: (this.selections.length !== 1)
     }];
     $('#canvas1').contextMenu('update', updateObj, {displayAround: 'cursor', position: 'auto'});
 };
 
 
 CanvasState.prototype.deleteShape = function (shape) {
-    if ((shape != null) && (shape.getName() != 'Circle')) {
-        var index = this.shapes.indexOf(shape);
-        if (index != -1) {
+    if ((shape != null) && (shape.getName() !== 'Circle')) {
+        let index = this.shapes.indexOf(shape);
+        if (index !== -1) {
             this.shapes[index].destroy();
             this.shapes.splice(index, 1);
         }
@@ -1628,20 +1659,20 @@ CanvasState.prototype.deleteShape = function (shape) {
 CanvasState.prototype.download = function () {
 
     // resise canvas to fit graph
-    var canvasw = this.w;
-    var canvash = this.h;
+    let canvasw = this.w;
+    let canvash = this.h;
     this.resize(true);
 
     setTimeout(function () {
-        var dataURL = s.canvas.toDataURL('image/png');
-        var save = document.createElement('a');
+        let dataURL = s.canvas.toDataURL('image/png');
+        let save = document.createElement('a');
 
         save.href = dataURL;
         save.target = '_blank';
         save.download = (s.label || 'unknown') + '.png';
 
         if (save.dispatchEvent) {
-            var evt = document.createEvent("MouseEvents");
+            let evt = document.createEvent("MouseEvents");
             evt.initEvent("click", true, true);
 
             save.dispatchEvent(evt);
@@ -1669,7 +1700,7 @@ CanvasState.prototype.addLine = function (line) {
 };
 
 CanvasState.prototype.deleteLine = function (line) {
-    var index = line.destination.parents.indexOf(line.origin);
+    let index = line.destination.parents.indexOf(line.origin);
     if (index > -1) {
         line.destination.parents.splice(index, 1);
     }
@@ -1693,10 +1724,10 @@ CanvasState.prototype.setSize = function (w, h) {
 };
 
 CanvasState.prototype.resize = function (overrideauto) {
-    var maxw = 0;
-    var maxh = 0;
+    let maxw = 0;
+    let maxh = 0;
     if (this.autosize || overrideauto) {
-        for (var i = this.shapes.length - 1; i >= 0; i--) {
+        for (let i = this.shapes.length - 1; i >= 0; i--) {
             maxw = Math.max(maxw, this.shapes[i].x + this.shapes[i].w + canvasMargin);
             maxh = Math.max(maxh, this.shapes[i].y + this.shapes[i].h + canvasMargin);
         }
@@ -1710,6 +1741,12 @@ CanvasState.prototype.setautosize = function (value) {
     this.autosize = value;
     this.resize(false);
 };
+
+//noinspection JSUnusedGlobalSymbols
+CanvasState.prototype.setonlydeletechildren = function (value) {
+    this.onlydeletechildren = value;
+};
+
 
 //noinspection JSUnusedGlobalSymbols
 CanvasState.prototype.setgridsnap = function (value) {
@@ -1738,16 +1775,16 @@ CanvasState.prototype.draw = function () {
 
         this.resize(false);
 
-        var ctx = this.ctx;
-        var shapes = this.shapes;
-        var lines = this.lines;
+        let ctx = this.ctx;
+        let shapes = this.shapes;
+        let lines = this.lines;
         this.clear();
 
         // draw all shapes
-        var l = shapes.length;
-        for (var i = 0; i < l; i++) {
-            if (shapes[i] != this.selection) {
-                var shape = shapes[i];
+        let l = shapes.length;
+        for (let i = 0; i < l; i++) {
+            if (shapes[i] !== this.selection) {
+                let shape = shapes[i];
                 // We can skip the drawing of elements that have moved off the screen:
                 if (shape.x > this.width || shape.y > this.height ||
                     shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
@@ -1755,7 +1792,7 @@ CanvasState.prototype.draw = function () {
             }
         }
 
-        var mySel = null;
+        let mySel = null;
         // draw selection
         // right now this is just a stroke along the edge of the selected Shape
         if (this.selections.length > 0) {
@@ -1775,7 +1812,7 @@ CanvasState.prototype.draw = function () {
         }
 
         if (this.selections.length > 0) {
-            for (var i = 0; i < this.selections.length; i++) {
+            for (let i = 0; i < this.selections.length; i++) {
                 ctx.strokeStyle = this.selectionColor;
                 ctx.lineWidth = this.selectionWidth;
                 mySel = this.selections[i];
@@ -1790,8 +1827,8 @@ CanvasState.prototype.draw = function () {
         }
 
         // draw lines
-        var l = lines.length;
-        for (var i = 0; i < l; i++) {
+        l = lines.length;
+        for (let i = 0; i < l; i++) {
             lines[i].draw(ctx);
         }
 
@@ -1808,7 +1845,7 @@ CanvasState.prototype.draw = function () {
 // Creates an object with x and y defined, set to the mouse position relative to the state's canvas
 // If you wanna be super-correct this can be tricky, we have to worry about padding and borders
 CanvasState.prototype.getMouse = function (e) {
-    var element = this.canvas, offsetX = 0, offsetY = 0, mx, my;
+    let element = this.canvas, offsetX = 0, offsetY = 0, mx, my;
 
     // Compute the total offset
     if (element.offsetParent !== undefined) {
@@ -1841,19 +1878,19 @@ function callbackEvent(e) {
 
 function showPropertyEditor(obj) {
     $('#propGrid').jqPropertyGrid(obj.persistant(), theMeta, function (property, value) {
-        if (propertiesTypes[property] == 'className') {
+        if (propertiesTypes[property] === 'className') {
             s.tranform(obj, value);
-        } else if (propertiesTypes[property] == 'int') {
+        } else if (propertiesTypes[property] === 'int') {
             if (typeof obj['set' + property] != 'undefined') {
                 obj['set' + property](value);
             } else
                 obj[property] = parseInt(value);
-        } else if (propertiesTypes[property] == 'boolean') {
+        } else if (propertiesTypes[property] === 'boolean') {
             if (typeof obj['set' + property] != 'undefined') {
                 obj['set' + property](value);
             } else
                 obj[property] = value;
-        } else if (propertiesTypes[property] == 'string') {
+        } else if (propertiesTypes[property] === 'string') {
             obj[property] = value;
         }
         s.valid = false;
@@ -1862,7 +1899,7 @@ function showPropertyEditor(obj) {
 
 function setGrid() {
     if (s.grid.active) {
-        var elt = document.getElementById('canvas1');
+        let elt = document.getElementById('canvas1');
         elt.setAttribute("style", '	 background-image: -webkit-repeating-radial-gradient(center center, ' + s.grid.color + ', ' + s.grid.color + ' 1px, transparent 1px, transparent 100%);' +
             '  background-image: -moz-repeating-radial-gradient(center center, ' + s.grid.color + ', ' + s.grid.color + ' 1px, transparent 1px, transparent 100%);' +
             '  background-image: -ms-repeating-radial-gradient(center center, ' + s.grid.color + ', ' + s.grid.color + ' 1px, transparent 1px, transparent 100%);' +
@@ -1880,36 +1917,37 @@ function init() {
     setGrid();
 
     // create shapes (for example)
-    var begin = new Circle(s, 280, 5, 40, 40, 'start');
+    let begin = new Circle(s, 280, 50, 40, 40, 'start');
     s.addShape(begin);
 
-    var answerYes = new Box(s, 340, 170, 160, 90, 'Answer: Yes \n then do ...', globalColor);
-    s.addShape(answerYes);
 
-    var answerNo = new Box(s, 50, 200, 160, 90, 'Answer is No \n so do ...', globalColor);
-    s.addShape(answerNo);
+        let answerYes = new Box(s, 340, 170, 160, 90, 'Answer: Yes \n then do ...', globalColor);
 
-    // Lets make some partially transparent
-    var asq2 = new Diamond(s, 30, 330, 160, 90, 'Another test\nwith a newline\nand another one', globalColor);
-    s.addShape(asq2);
+        s.addShape(answerYes);
 
-    var asq = new Diamond(s, 220, 70, 160, 90, '1st question\n so what ?', globalColor);
-    s.addShape(asq);
+        let answerNo = new Box(s, 50, 200, 160, 90, 'Answer is No \n so do ...', globalColor);
+        s.addShape(answerNo);
 
-    var doc = new Doc(s, 420, 200, 160, 100, 'one', globalColor);
-    s.addShape(doc);
+        // Lets make some partially transparent
+        let asq2 = new Diamond(s, 30, 330, 160, 90, 'Another test\nwith a newline\nand another one', globalColor);
+        s.addShape(asq2);
 
-    // add lines between shapes
-    s.addLine(new Line(asq, HANDLE.RIGHT, answerYes));
-    s.addLine(new Line(answerNo, HANDLE.LEFT, answerNo));
-    s.addLine(new Line(begin, HANDLE.BOTTOM, asq));
-    s.addLine(new Line(asq, HANDLE.LEFT, answerNo));
-    s.addLine(new Line(answerNo, HANDLE.LEFT, answerNo));
-    s.addLine(new Line(answerNo, HANDLE.BOTTOM, asq2));
-    s.addLine(new Line(asq2, HANDLE.LEFT, asq));
+        let asq = new Diamond(s, 220, 70, 160, 90, '1st question\n so what ?', globalColor);
+        s.addShape(asq);
 
-    s.addLine(new Line(asq, HANDLE.BOTTOM, doc));
+        let doc = new Doc(s, 420, 200, 160, 100, 'one', globalColor);
+        s.addShape(doc);
 
+        // add lines between shapes
+        s.addLine(new Line(asq, HANDLE.RIGHT, answerYes));
+        s.addLine(new Line(answerNo, HANDLE.LEFT, answerNo));
+        s.addLine(new Line(begin, HANDLE.BOTTOM, asq));
+        s.addLine(new Line(asq, HANDLE.LEFT, answerNo));
+        s.addLine(new Line(answerNo, HANDLE.LEFT, answerNo));
+        s.addLine(new Line(answerNo, HANDLE.BOTTOM, asq2));
+        s.addLine(new Line(asq2, HANDLE.LEFT, asq));
+
+        s.addLine(new Line(asq, HANDLE.BOTTOM, doc));
     showPropertyEditor(s);
 }
 
