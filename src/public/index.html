@@ -19,76 +19,93 @@
 	<link rel="stylesheet" href="contextmenu/contextMenu.css">
 	<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
 	<link rel="stylesheet" href="js/jqPropertyGrid.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 
 
 	<style>
-  
+		body {
+			margin: 0
+		}
+		#container {
+			height: 100vh;
+			width: 100%;
+			overflow: scroll;
+		}
+		#sidebar {
+			float: left;
+			margin-left: 20px;
+			margin-right: 20px;
+			width: 361px;
 
-	body {
-		margin:0
-	}
-	#container{
-		height: 100vh;
-		width:100%;
-		overflow:scroll;
-		
-	}
+		}
+		#propGrid {
+			background-color: white;
+			/* position:absolute; right:20px; z-order:1000 */
+			position: fixed;
+			top: 20px;
+		}
+		#canvas1 {
+			display: flex;
+			margin-left: 20px
+			-moz-box-shadow: 3px 3px 5px 0 #656565;
+			-webkit-box-shadow: 3px 3px 5px 0 #656565;
+			-o-box-shadow: 3px 3px 5px 0 #656565;
+			box-shadow: 3px 3px 5px 0 #656565;
+			filter: progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=135, Strength=5);
+			-moz-border-radius: 4px;
+			-webkit-border-radius: 4px;
+			border-radius: 4px;
+		}
 
-	
-  #sidebar {
- 	  float:left;
-		margin-left: 20px;
-    margin-right: 20px;
-    width:361px;
-	  
-  }
-	#propGrid {
-		background-color:white;
-		 /* position:absolute; right:20px; z-order:1000 */ 
-  	 position:fixed; 
-    top:20px;
-	}
-	#canvas1 {
-	  display:flex;
-	  margin-left:20px
-	  -moz-box-shadow: 3px 3px 5px 0 #656565;
-    -webkit-box-shadow: 3px 3px 5px 0 #656565;
-    -o-box-shadow: 3px 3px 5px 0 #656565;
-    box-shadow: 3px 3px 5px 0 #656565;
-    filter:progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=135, Strength=5);
-    -moz-border-radius: 4px;
-    -webkit-border-radius: 4px;
-    border-radius: 4px;
-	}
-	
-	.otherShadow {
-    -moz-box-shadow: 1px 1px 5px 0 #656565;
-    -webkit-box-shadow: 1px 1px 5px 0 #656565;
-    -o-box-shadow: 1px 1px 5px 0 #656565;
-    box-shadow: 1px 1px 5px 0 #656565;
-    filter:progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=134, Strength=5);
-	}
-	
-
+		.otherShadow {
+			-moz-box-shadow: 1px 1px 5px 0 #656565;
+			-webkit-box-shadow: 1px 1px 5px 0 #656565;
+			-o-box-shadow: 1px 1px 5px 0 #656565;
+			box-shadow: 1px 1px 5px 0 #656565;
+			filter: progid:DXImageTransform.Microsoft.Shadow(color=#656565, Direction=134, Strength=5);
+		}
 	</style>
 </head>
 <body>
-  
-  
-  <div id='container'>
-	  <div id='log'>&nbsp;</div>
-	  <div id='sidebar'>
-      <div id='propGrid' class="otherShadow"></div>
-      &nbsp;
-    </div>
-    <canvas id="canvas1" width="1000" height="1400" style="float:left;">
-      This text is displayed if your browser does not support HTML5 Canvas.
-    </canvas>
-  </div>
+<div id='container'>
+	<div id='log'>&nbsp;</div>
+	<div id='sidebar'>
+		<div id='propGrid' class="otherShadow"></div>
+		&nbsp;
+	</div>
+	<canvas id="canvas1" width="1000" height="1400" style="float:left;">
+		This text is displayed if your browser does not support HTML5 Canvas.
+	</canvas>
+</div>
 
-  <div id="menuWrapper">
-    <div id="menuTrigger" class="iw-mTrigger"></div>
-  </div>
+<div id="menuWrapper">
+	<div id="menuTrigger" class="iw-mTrigger"></div>
+</div>
+<div class="modal fade" id="jsonModal" tabindex="-1" role="dialog" aria-labelledby="Json" aria-hidden="true">
+	<div class="modal-dialog modal-xl" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="jsonModalLabel">Load / Save Json</h5>
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<form>
+					<div class="form-group">
+						<label for="json-text" class="col-form-label">Json :</label>
+						<textarea class="form-control" cols="70" rows="20" id="json-text"></textarea>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="save-json">save</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script>// <![CDATA[
 	$(function() {
 		init();
@@ -99,27 +116,11 @@ function cbval(e, a, b, c, d) {
 }
 		// This is the metadata object that describes the target object properties (optional)
 		var theMeta = {
-/*
-			font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
-			fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }},
-			fontColor: { group: 'Editor', name: 'Font color', type: 'color', options: { preferredFormat: 'hex' }},
-			jQuery: { group: 'Plugins', description: 'Whether or not to include jQuery on the page' },
-			modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
-			framework: { name: 'Framework',
-			             group: 'Plugins',
-			             type: 'options',
-			             options: [ 'None',
-			                        {text:'AngularJS', value: 'angular'},
-			                        {text:'Backbone.js', value: 'backbone'}],
-			             description: 'Whether to include any additional framework'
-			            },
-
-*/
 			x: { group: 'Shape', name: 'x', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);}}},
 			y: { group: 'Shape', name: 'y', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);} }},
 			w: { group: 'Shape', name: 'w', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);} }},
-			h: { group: 'Shape', name: 'h', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);} }},
-			gridsize: { group: 'Shape', name: 'grid-size', type: 'number', options: { min: 2, max: 50, step: 2, stop:function(e){update(e.target.dataset.name, e.target.value);}}},
+			h:        { group: 'Shape', name: 'h',         type: 'number', options: { min: 0, step: 1,          stop:function(e){update(e.target.dataset.name, e.target.value);} }},
+			gridsize: { group: 'Shape', name: 'grid-size', type: 'number', options: { min: 2, max: 50, step: 2, stop:function(e){update(e.target.dataset.name, e.target.value);} }},
 			gridsnap: {group: 'Shape', name: 'grid-snap', type: 'boolean', description: 'Objects snap to grid'},
 			autosize: {group: 'Shape', name: 'canvas auto size', type: 'boolean', description: 'Auto adjust canvas size'},
 			onlydeletechildren: {group: 'Shape', name: 'children link only', type: 'boolean', description: 'can only delete children link'},
@@ -141,14 +142,29 @@ function cbval(e, a, b, c, d) {
 			                        {text:'Send a mail to', value:'mailTo'}],
 			              description: 'Action at this step'
 			             },
-      		parameter: { group: 'Function', name: 'Parameters'},
-			trueOnLeft: {group: 'Shape', type: 'boolean', description: 'True link is on the left'}
+      		parameters: { group: 'Function', name: 'Parameters'},
+			trueOnLeft: { group: 'Shape', type: 'boolean', description: 'True link is on the left'}
 		};
 
+/*
+font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
+fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }},
+fontColor: { group: 'Editor', name: 'Font color', type: 'color', options: { preferredFormat: 'hex' }},
+jQuery: { group: 'Plugins', description: 'Whether or not to include jQuery on the page' },
+modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
+framework: { name: 'Framework',
+group: 'Plugins',
+type: 'options',
+options: [ 'None',
+{text:'AngularJS', value: 'angular'},
+{text:'Backbone.js', value: 'backbone'}],
+description: 'Whether to include any additional framework'
+},
 
+*/
 
 
 // ]]></script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 </body>
 </html>

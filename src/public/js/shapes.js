@@ -79,12 +79,14 @@ propertiesTypes = {
     'label': 'string',
     'description': 'string',
     'execFunction': 'string',
-    'parameter': 'string',
+    'parameters': 'string',
     'trueOnLeft': 'boolean',
     'gridsize': 'int',
     'gridsnap': 'boolean',
     'autosize': 'boolean',
-    'onlydeletechildren': 'boolean'
+    'onlydeletechildren': 'boolean',
+    'jsonFile': 'text'
+
 };
 
 let menu = [{
@@ -121,7 +123,16 @@ let menu = [{
     fun: function () {
         s.download();
     }
-}];
+}, {
+    name: 'Load/Save',
+    img: 'images/saveimage.png',
+    title: 'Save to Json or load a diagram from Json',
+    fun: function () {
+        s.save();
+    }
+}
+
+];
 
 /*
 function consolelog(logs) {
@@ -189,6 +200,10 @@ function Line(origin, origineHandle, destination) {
     this.arrowSize = 8;
 
     this.delButton = {x:0, y:0}
+}
+
+Line.prototype.exportJson = function() {
+    return {origin: this.origin.name, handle: this.origineHandle, destination: this.destination.name}
 }
 
 Line.prototype.destroy = function () {
@@ -486,12 +501,18 @@ Line.prototype.doPath = function (ctx) {
     return DelBtnPos
 
 };
-
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
 
 // *****************************
 // **  Define a Shape Object  **
 // *****************************
 function Shape(parent, x, y, w, h, label, fill) {
+    this.name = uuidv4();
     this.x = x || 0;
     this.y = y || 0;
     this.w = w || 1;
@@ -507,7 +528,7 @@ function Shape(parent, x, y, w, h, label, fill) {
     this.children = [];
     this.lines = [];
     this.parent = parent;
-    this.parameter = '';
+    this.parameters = '';
 
     // store offet from mouse coordinate when mousedown on canvas
     this.dragoffx = 0;
@@ -839,6 +860,22 @@ function Circle(parent, x, y, w, h, label, fill) {
 
 Circle.prototype = new Linkable;
 
+Circle.prototype.exportJson = function () {
+    return {
+        name: this.name,
+        type: this.getName(),
+        x: this.x,
+        y: this.y,
+        w: this.w,
+        h: this.h,
+        label: this.label,
+        fill: this.fill,
+        parameters: this.parameters,
+        description: this.description
+    }
+}
+
+
 Circle.prototype.persistant = function () {
     return {
         'x': this.x,
@@ -847,7 +884,7 @@ Circle.prototype.persistant = function () {
         'h': this.h,
         'label': this.label,
         'description': this.description,
-        'parameter': this.parameter
+        'parameters': this.parameters
     };
 };
 
@@ -899,6 +936,7 @@ function Box(parent, x, y, w, h, label, fill) {
     this.base = Handleable;
     this.base(parent, x, y, w, h, label, fill);
 
+    //defaults value;
     this.execFunction = '';
     this.description = '';
     this.parameters = '';
@@ -916,9 +954,25 @@ Box.prototype.persistant = function () {
         'label': this.label,
         'description': this.description,
         'execFunction': this.execFunction,
-        'parameter': this.parameters
+        'parameters': this.parameters
     };
 };
+
+Box.prototype.exportJson = function () {
+    return {
+        name: this.name,
+        type: this.getName(),
+        x: this.x,
+        y: this.y,
+        w: this.w,
+        h: this.h,
+        label: this.label,
+        fill: this.fill,
+        parameters: this.parameters,
+        description: this.description,
+        'function': this.execFunction
+    }
+}
 
 
 Box.prototype.getName = function () {
@@ -975,9 +1029,25 @@ Doc.prototype.persistant = function () {
         'label': this.label,
         'description': this.description,
         'execFunction': this.execFunction,
-        'parameter': this.parameters
+        'parameters': this.parameters
     };
 };
+
+Doc.prototype.exportJson = function () {
+    return {
+        name: this.name,
+        type: this.getName(),
+        x: this.x,
+        y: this.y,
+        w: this.w,
+        h: this.h,
+        label: this.label,
+        fill: this.fill,
+        parameters: this.parameters,
+        description: this.description,
+        'function': this.execFunction
+    }
+}
 
 
 Doc.prototype.getName = function () {
@@ -1046,10 +1116,27 @@ Diamond.prototype.persistant = function () {
         'label': this.label,
         'description': this.description,
         'execFunction': this.execFunction,
-        'parameter': this.parameter,
+        'parameters': this.parameters,
         'trueOnLeft': this.trueOnLeft
     };
 };
+
+Diamond.prototype.exportJson = function () {
+    return {
+        name: this.name,
+        type: this.getName(),
+        x: this.x,
+        y: this.y,
+        w: this.w,
+        h: this.h,
+        label: this.label,
+        fill: this.fill,
+        parameters: this.parameters,
+        description: this.description,
+        'function': this.execFunction,
+        trueOnLeft: this.trueOnLeft
+    }
+}
 
 Diamond.prototype.getName = function () {
     return 'Diamond';
@@ -1132,7 +1219,7 @@ function CanvasState(canvas) {
 
     this.label = '';
     this.description = '';
-    this.parameter = '';
+    this.parameters = '';
     this.gridsize = 10;
     this.autosize = false;
     this.onlydeletechildren = true;
@@ -1425,9 +1512,11 @@ function CanvasState(canvas) {
                 }
                 break;
             case 65: // a
-                if (e.ctrlKey) {
-                    s.selectAll();
-                    e.preventDefault();
+                if (!($('#jsonModal').hasClass('show'))) {
+                    if (e.ctrlKey) {
+                        s.selectAll();
+                        e.preventDefault();
+                    }
                 }
                 break;
             case 37: // <-
@@ -1513,6 +1602,7 @@ function CanvasState(canvas) {
             callbackEvent(myState);
         }
         myState.updMenu()
+        myState.exportJson();
 
     }, true);
 
@@ -1534,16 +1624,46 @@ function CanvasState(canvas) {
     this.selectionColor = SEL_COLOR; //'#CC0000';
     this.selectionWidth = 2;
     this.interval = 30;
+
     setInterval(function () {
-        myState.draw();
+       myState.draw();
     }, myState.interval);
+}
+
+
+
+CanvasState.prototype.exportJson = function () {
+    let shapes = [];
+    let lines = [];
+    for (let i = 0; i < this.shapes.length; i++) {
+        //shapes.push(this.shapes[i].exportJson());
+        shapes.push(this.shapes[i].exportJson());
+    }
+    for (let i = 0; i < this.lines.length; i++) {
+        lines.push(this.lines[i].exportJson());
+    }
+    let canvas = {
+        w:this.w,
+        h:this.h,
+        label:this.label,
+        description:this.description,
+        parameters:this.parameters,
+        grid:this.grid,
+        autosize:this.autosize,
+        onlydeletechildren:this.onlydeletechildren,
+        shapes:shapes,
+        lines:lines
+    }
+
+   //console.log(JSON.stringify(canvas));
+    return canvas;
 }
 
 CanvasState.prototype.persistant = function () {
     return {
         'label': this.label,
         'description': this.description,
-        'parameter': this.parameter,
+        //'parameter': this.parameter,
         'w': this.w,
         'h': this.h,
         'gridsize': this.grid.size,
@@ -1641,21 +1761,52 @@ CanvasState.prototype.updateSelections = function () {
 CanvasState.prototype.updMenu = function () {
     let updateObj = [{
         name: 'delete',
-        disable: (this.selections.length !== 1)
+        disable: (this.selections.length === 0)
     }];
     $('#canvas1').contextMenu('update', updateObj, {displayAround: 'cursor', position: 'auto'});
 };
 
 
-CanvasState.prototype.deleteShape = function (shape) {
-    if ((shape != null) && (shape.getName() !== 'Circle')) {
+CanvasState.prototype.deleteShape = function(shape) {
+    console.log(shape)
+
+    if ((shape !== null) && (shape.className !== 'Circle')) {
         let index = this.shapes.indexOf(shape);
+        console.log(index)
         if (index !== -1) {
             this.shapes[index].destroy();
             this.shapes.splice(index, 1);
         }
     }
 };
+
+CanvasState.prototype.load = function () {
+
+}
+
+$('#jsonModal').on('show.bs.modal', function (event) {
+    console.log(event.relatedTarget);
+});
+
+
+function handleSaveButton(event) {
+    try {
+        let json = JSON.parse( $('#json-text').val());
+        loadGraph(json)
+        $('#jsonModal').modal('hide');
+    } catch (error) {
+        alert('json invalid ! '+error.message)
+
+    }
+}
+CanvasState.prototype.save = function () {
+    console.log(document.querySelector('#save-json'))
+    document.querySelector('#save-json').removeEventListener('click', handleSaveButton)
+    document.querySelector('#save-json').addEventListener('click', handleSaveButton);
+    $('#json-text').val( JSON.stringify(this.exportJson(), 'null','  '));
+    $('#jsonModal').modal('show');
+}
+
 CanvasState.prototype.download = function () {
 
     // resise canvas to fit graph
@@ -1684,9 +1835,12 @@ CanvasState.prototype.download = function () {
 };
 
 CanvasState.prototype.deleteSelection = function () {
-    this.deleteShape(this.selection);
-    this.selection = null;
-    this.valid = false;
+    for (let i=0; i<this.selections.length; i++) {
+        this.deleteShape(this.selections[i])
+    }
+    this.valid = false
+    this.selection = null
+    this.selections = []
 };
 
 CanvasState.prototype.addShape = function (shape) {
@@ -1828,7 +1982,8 @@ CanvasState.prototype.draw = function () {
 
         // draw lines
         l = lines.length;
-        for (let i = 0; i < l; i++) {
+        for (let i = l-1; i >= 0; i--) {
+        //for (let i = 0; i < l; i++) {
             lines[i].draw(ctx);
         }
 
@@ -1893,7 +2048,10 @@ function showPropertyEditor(obj) {
         } else if (propertiesTypes[property] === 'string') {
             obj[property] = value;
         }
+        s.exportJson();
         s.valid = false;
+
+
     });
 }
 
@@ -1909,45 +2067,178 @@ function setGrid() {
     }
 }
 
+
+let save = {
+    "w": 1000,
+    "h": 1400,
+    "label": "lab",
+    "description": "desc",
+    "parameters": "blah",
+    "grid": {
+        "size": 10,
+        "active": true,
+        "snap": true,
+        "color": "rgba(0,0,0,.1)"
+    },
+    "autosize": false,
+    "onlydeletechildren": true,
+    "shapes": [
+        {
+            "name": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
+            "type": "Circle",
+            "x": 460,
+            "y": 20,
+            "w": 40,
+            "h": 40,
+            "label": "start",
+            "fill": "#AAAAAA",
+            "parameters": "",
+            "description": ""
+        },
+        {
+            "name": "bb8d8252-f082-4a5b-98ec-2b462f13f270",
+            "type": "Box",
+            "x": 640,
+            "y": 390,
+            "w": 160,
+            "h": 90,
+            "label": "Answer: Yes \n then do ...",
+            "fill": "rgba(224, 236, 255, 0.8)",
+            "parameters": "",
+            "description": "",
+            "function": ""
+        },
+        {
+            "name": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
+            "type": "Box",
+            "x": 110,
+            "y": 240,
+            "w": 160,
+            "h": 90,
+            "label": "Answer is No \n so do ...",
+            "fill": "rgba(224, 236, 255, 0.8)",
+            "parameters": "qsdfqsdfqsd",
+            "description": "",
+            "function": "httpCode"
+        },
+        {
+            "name": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
+            "type": "Diamond",
+            "x": 80,
+            "y": 440,
+            "w": 220,
+            "h": 90,
+            "label": "Another test\nwith a newline\nand another one",
+            "fill": "rgba(224, 236, 255, 0.8)",
+            "parameters": "test@t1t.fr",
+            "description": "",
+            "function": "mailTo",
+            "trueOnLeft": true
+        },
+        {
+            "name": "70fc814d-4151-43ec-9688-df8f72d3176a",
+            "type": "Diamond",
+            "x": 400,
+            "y": 120,
+            "w": 160,
+            "h": 90,
+            "label": "1st question\n so what ?",
+            "fill": "rgba(224, 236, 255, 0.8)",
+            "parameters": "",
+            "description": "",
+            "function": "",
+            "trueOnLeft": true
+        },
+        {
+            "name": "76397a1f-95c3-447a-b20a-3593e3a8ff14",
+            "type": "Doc",
+            "x": 400,
+            "y": 250,
+            "w": 160,
+            "h": 100,
+            "label": "one",
+            "fill": "rgba(224, 236, 255, 0.8)",
+            "parameters": "lkuulu@pharabod.com",
+            "description": "",
+            "function": "mailTo"
+        }
+    ],
+    "lines": [
+        {
+            "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
+            "handle": 4,
+            "destination": "bb8d8252-f082-4a5b-98ec-2b462f13f270"
+        },
+        {
+            "origin": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
+            "handle": 6,
+            "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
+        },
+        {
+            "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
+            "handle": 3,
+            "destination": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d"
+        },
+        {
+            "origin": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
+            "handle": 6,
+            "destination": "cf3ff639-2944-430f-8ea1-22ab04eadf6c"
+        },
+        {
+            "origin": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
+            "handle": 3,
+            "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
+        },
+        {
+            "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
+            "handle": 6,
+            "destination": "76397a1f-95c3-447a-b20a-3593e3a8ff14"
+        }
+    ]
+};
+
+
+function loadGraph(save) {
+    s.shapes=[]
+    s.lines=[]
+    s.autosize = save.autosize;
+    s.label = save.label;
+    s.w = save.w;
+    s.h = save.h;
+    s.parameters = save.parameters;
+    s.onlydeletechildren = save.onlydeletechildren;
+    s.description = save.description;
+    s.grid.size = save.grid.size;
+    s.grid.snap = save.grid.snap;
+    s.grid.color = save.grid.color;
+    s.grid.active = save.grid.active;
+
+    let initShapes =[];
+
+
+    for (let i=0; i<save.shapes.length; i++) {
+        console.log(save.shapes[i])
+        initShapes[save.shapes[i].name]=new window[save.shapes[i].type](s, save.shapes[i].x, save.shapes[i].y, save.shapes[i].w, save.shapes[i].h, save.shapes[i].label, save.shapes[i].fill);
+        initShapes[save.shapes[i].name].name = save.shapes[i].name
+        initShapes[save.shapes[i].name].description = save.shapes[i].description
+        initShapes[save.shapes[i].name].execFunction = save.shapes[i].function
+        console.log(save.shapes[i].parameters)
+        initShapes[save.shapes[i].name].parameters = save.shapes[i].parameters
+        s.addShape(initShapes[save.shapes[i].name])
+    }
+    console.log(initShapes)
+
+    for (let i=0; i<save.lines.length; i++) {
+        s.addLine(new Line(initShapes[save.lines[i].origin], save.lines[i].handle, initShapes[save.lines[i].destination]));
+    }
+
+    setGrid();
+
+}
 function init() {
     // init main canvas
     s = new CanvasState(document.getElementById('canvas1'));
-
-    // grid setup
-    setGrid();
-
-    // create shapes (for example)
-    let begin = new Circle(s, 280, 50, 40, 40, 'start');
-    s.addShape(begin);
-
-
-        let answerYes = new Box(s, 340, 170, 160, 90, 'Answer: Yes \n then do ...', globalColor);
-
-        s.addShape(answerYes);
-
-        let answerNo = new Box(s, 50, 200, 160, 90, 'Answer is No \n so do ...', globalColor);
-        s.addShape(answerNo);
-
-        // Lets make some partially transparent
-        let asq2 = new Diamond(s, 30, 330, 160, 90, 'Another test\nwith a newline\nand another one', globalColor);
-        s.addShape(asq2);
-
-        let asq = new Diamond(s, 220, 70, 160, 90, '1st question\n so what ?', globalColor);
-        s.addShape(asq);
-
-        let doc = new Doc(s, 420, 200, 160, 100, 'one', globalColor);
-        s.addShape(doc);
-
-        // add lines between shapes
-        s.addLine(new Line(asq, HANDLE.RIGHT, answerYes));
-        s.addLine(new Line(answerNo, HANDLE.LEFT, answerNo));
-        s.addLine(new Line(begin, HANDLE.BOTTOM, asq));
-        s.addLine(new Line(asq, HANDLE.LEFT, answerNo));
-        s.addLine(new Line(answerNo, HANDLE.LEFT, answerNo));
-        s.addLine(new Line(answerNo, HANDLE.BOTTOM, asq2));
-        s.addLine(new Line(asq2, HANDLE.LEFT, asq));
-
-        s.addLine(new Line(asq, HANDLE.BOTTOM, doc));
+    loadGraph(save)
     showPropertyEditor(s);
 }
 

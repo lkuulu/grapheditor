@@ -131,7 +131,6 @@ var update;
 		var elemId = pgId + name;
 
 		var valueHTML;
-
 		// If boolean create checkbox
 		if (type === 'boolean' || (type === '' && typeof value === 'boolean')) {
 			valueHTML = '<input type="checkbox" id="' + elemId + '" value="' + name + '"' + (value ? ' checked' : '') + ' />';
