@@ -13,6 +13,7 @@
 	<!--script src="js/updown.js"></script-->
 
 
+	<script src="js/execFunctionDefinition.js"></script>
 	<script src="contextmenu/contextMenu.js"></script>
 	<script src="js/jqPropertyGrid.js"></script>
 	<script src="js/shapes.js"></script>
@@ -114,7 +115,8 @@
 function cbval(e, a, b, c, d) {
 	console.log(e, a,b,c,d);
 }
-		// This is the metadata object that describes the target object properties (optional)
+
+// This is the metadata object that describes the target object properties (optional)
 		var theMeta = {
 			x: { group: 'Shape', name: 'x', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);}}},
 			y: { group: 'Shape', name: 'y', type: 'number', options: { min: 0, step: 1, stop:function(e){update(e.target.dataset.name, e.target.value);} }},
@@ -126,26 +128,27 @@ function cbval(e, a, b, c, d) {
 			onlydeletechildren: {group: 'Shape', name: 'children link only', type: 'boolean', description: 'can only delete children link'},
 			label: { group: 'Shape', name: 'label', type: 'textarea', description: 'Shape label'},
 			description: { group: 'Shape', name: 'Description', type: 'textarea'},
-			className: { name:'Type',
-			              group: 'Shape',
-			              type:'options',
-			              options:[ {text:'Action', value:'Box'},
-			                        {text:'Question', value:'Diamond'},
-			                        {text:'Document', value:'Doc'}],
+			className: {
+				name:'Type',
+			    group: 'Shape',
+			    type:'options',
+			    options:[ {text:'Action', value:'Box'},
+			    		  {text:'Question', value:'Diamond'},
+			              {text:'Document', value:'Doc'}],
 			              description: 'Kind of shape'
-			             },
-			execFunction: { name:'Execute',
-			              group: 'Function',
-			              type:'options',
-			              options:[ 'none',{text:'Get http response code from url', value:'httpCode'},
-			                        {text:'API Object exists for url', value:'apiObjectExists'},
-			                        {text:'Send a mail to', value:'mailTo'}],
-			              description: 'Action at this step'
-			             },
+			},
+			execFunction: {
+				name:'Execute',
+			    group: 'Function',
+			    type:'options',
+			    description: 'Action at this step'
+			},
       		parameters: { group: 'Function', name: 'Parameters'},
 			trueOnLeft: { group: 'Shape', type: 'boolean', description: 'True link is on the left'}
 		};
 
+		// Add Options for execFunction
+   		theMeta.execFunction = Object.assign(theMeta.execFunction, ExecFunctionDefs.listFunctionsForPropertyEditor())
 /*
 font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
 fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }},

@@ -2104,9 +2104,9 @@ let save = {
             "h": 90,
             "label": "Answer: Yes \n then do ...",
             "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "",
+            "parameters": "http://test.com/api",
             "description": "",
-            "function": ""
+            "function": "apiPOST"
         },
         {
             "name": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
@@ -2132,7 +2132,7 @@ let save = {
             "fill": "rgba(224, 236, 255, 0.8)",
             "parameters": "test@t1t.fr",
             "description": "",
-            "function": "mailTo",
+            "function": "sendMail",
             "trueOnLeft": true
         },
         {
@@ -2160,7 +2160,7 @@ let save = {
             "fill": "rgba(224, 236, 255, 0.8)",
             "parameters": "lkuulu@pharabod.com",
             "description": "",
-            "function": "mailTo"
+            "function": "sendMail"
         }
     ],
     "lines": [
@@ -2217,16 +2217,16 @@ function loadGraph(save) {
 
 
     for (let i=0; i<save.shapes.length; i++) {
-        console.log(save.shapes[i])
+//        console.log(save.shapes[i])
         initShapes[save.shapes[i].name]=new window[save.shapes[i].type](s, save.shapes[i].x, save.shapes[i].y, save.shapes[i].w, save.shapes[i].h, save.shapes[i].label, save.shapes[i].fill);
         initShapes[save.shapes[i].name].name = save.shapes[i].name
         initShapes[save.shapes[i].name].description = save.shapes[i].description
         initShapes[save.shapes[i].name].execFunction = save.shapes[i].function
-        console.log(save.shapes[i].parameters)
+//        console.log(save.shapes[i].parameters)
         initShapes[save.shapes[i].name].parameters = save.shapes[i].parameters
         s.addShape(initShapes[save.shapes[i].name])
     }
-    console.log(initShapes)
+//    console.log(initShapes)
 
     for (let i=0; i<save.lines.length; i++) {
         s.addLine(new Line(initShapes[save.lines[i].origin], save.lines[i].handle, initShapes[save.lines[i].destination]));
@@ -2240,6 +2240,8 @@ function init() {
     s = new CanvasState(document.getElementById('canvas1'));
     loadGraph(save)
     showPropertyEditor(s);
+
+    //console.log((new sendMail).execute({test:'toto', fill:1}))
 }
 
 /*
