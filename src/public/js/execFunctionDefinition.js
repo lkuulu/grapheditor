@@ -1,6 +1,7 @@
 ﻿/*
   Define ExecFunction class structure
  */
+let res;
 class ExecFunctionDefs {
     static set = []
     constructor() {
@@ -27,7 +28,6 @@ class ExecFunctionDefs {
     static me() {
         return {name: this.name, definition: this.definition}
     }
-
 }
 
 class sendMail extends ExecFunctionDefs {
@@ -47,29 +47,22 @@ class apiGET extends ExecFunctionDefs {
     constructor () {
         super()
     }
-
     execute(parameters) {
         parameters = super.execute(parameters);
-        console.log(this.name, 'execute', parameters);
-        fetch('http://postman-echo.com/get',
-            { method:'GET', mode:'no-cors',
-            headers:{'Access-Control-Allow-Origin':'*', 'Access-Control-Allow-Headers': '*'}
+//        console.log(this.name, 'execute', parameters);
+      fetch(parameters.url,
+            { method:'GET'
             })
-            .then(response => {
-                console.log(response)
-                if (response.ok) {
-                    return Object.assign(parameters,response.json())
-                } else {
-                    throw new Error('API request failed');
-                }
-            })
-            .then(data => {
-                // Process the response data here
-                console.log(data); // Example: Logging the data to the console
-            })
-            .catch(error => {
-                // Handle any errors here
-                console.error(error); // Example: Logging the error to the console
+            .then(function(response) {
+                res = response;
+                return response.text();
+            }).then(function(data) {
+              res.data = data
+              let cb = parameters.script;
+              let callBack=new Function(cb);
+              callBack();
+            }).catch(error => {
+              console.error(error); // Example: Logging the error to the console
             });
         return parameters
     }
@@ -103,14 +96,17 @@ class apiObjectExists extends ExecFunctionDefs {
 
 }
 
-
-
 sendMail.register()
 apiPOST.register()
 apiGET.register()
 apiObjectExists.register()
 
 let monGet = new apiGET()
-monGet.execute()
+monGet.execute(
+    {
+        url:'https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1',
+        script:'console.log(\'toto\');console.log(\'tata\');console.log(\'pouet\',res.data);'
+    }
+)
 
 

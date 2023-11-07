@@ -131,6 +131,16 @@ let menu = [{
         s.save();
     }
 }
+, {
+    name: 'execute',
+    img: 'images/saveimage.png',
+    title: 'Execute function as a test',
+    fun: function () {
+        for (let i=0; i<this.selections.length; i++) {
+            this.selections[i].exec()
+        }
+    }
+}
 
 ];
 
@@ -666,6 +676,7 @@ Linkable.prototype.setLinkCursor = function (container, mx, my) {
 };
 
 
+
 // ***********************************
 // **  Define an handleable Object  **
 // **  Inherit from a Shape object  **
@@ -1106,6 +1117,8 @@ function Diamond(parent, x, y, w, h, label, fill) {
 
 Diamond.prototype = new Handleable;
 
+
+
 Diamond.prototype.persistant = function () {
     return {
         'className': this.className,
@@ -1120,6 +1133,10 @@ Diamond.prototype.persistant = function () {
         'trueOnLeft': this.trueOnLeft
     };
 };
+
+Diamond.prototype.exec = function () {
+
+}
 
 Diamond.prototype.exportJson = function () {
     return {
@@ -1807,6 +1824,11 @@ CanvasState.prototype.save = function () {
     $('#jsonModal').modal('show');
 }
 
+CanvasState.prototype.exec = function () {
+    console.log(this.parameters);
+}
+
+
 CanvasState.prototype.download = function () {
 
     // resise canvas to fit graph
@@ -2138,15 +2160,15 @@ let save = {
         {
             "name": "70fc814d-4151-43ec-9688-df8f72d3176a",
             "type": "Diamond",
-            "x": 400,
+            "x": 440,
             "y": 120,
             "w": 160,
             "h": 90,
             "label": "1st question\n so what ?",
             "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "",
+            "parameters": "{        url:'https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1',\nscript:'console.log(\\'toto\\');console.log(\\'tata\\');console.log(\\'pouet\\',res.data);'\n    }",
             "description": "",
-            "function": "",
+            "function": "apiGET",
             "trueOnLeft": true
         },
         {
