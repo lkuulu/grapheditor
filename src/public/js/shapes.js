@@ -28,6 +28,7 @@
 // * - add multi-select shapes with a mouse surround
 // * - add select/deselect shapes with a keyboard trick (Ctrl+click)
 // * - keyboard event to callback events (move / delete)
+// * - add save/export feature
 // * SOON :
 // * - add callback for rest storage/property editor/whatever
 // ********************************************************************
