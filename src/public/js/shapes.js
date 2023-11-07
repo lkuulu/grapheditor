@@ -10,9 +10,8 @@
 
 // Based on Simon Sarris's work 
 // enhanced by Luc Pharabod
-// Last update july 2015
-// www.shotthemhost.com
-// luc.pharabod@shotthemhost.com
+// Last update October 2023
+// lkuulu@pharabod.com
 // ********************************************************************
 // * - add Handle object for displaying resize handles
 // * - add Shape as a base class
