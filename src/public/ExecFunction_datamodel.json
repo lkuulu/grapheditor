@@ -1,0 +1,66 @@
+{
+  "item": [
+    {
+      "name": "toto",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "console.log('ici')"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Response is valid\", function() {",
+              "    pm.response.to.have.status(200);",
+              "    pm.response.to.be.withBody;",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test(\"Public domain is exposed in media\", function() {",
+              "    pm.expect(response.mainImage.image).to.have.property('publicMediaDomain').that.contains('s.france24.com')",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/ld+json",
+            "type": "text"
+          },
+          {
+            "key": "X-Fmm-Brand",
+            "value": "FRANCE24",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{url_mezzo}}/content/api/articles/00010e12-db64-11e8-84f0-005056a96846",
+          "host": [
+            "{{url_mezzo}}"
+          ],
+          "path": [
+            "content",
+            "api",
+            "articles",
+            "00010e12-db64-11e8-84f0-005056a96846"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
