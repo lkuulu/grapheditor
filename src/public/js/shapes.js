@@ -2410,6 +2410,7 @@ function loadGraph(save) {
     setGrid();
 
 }
+
 function init() {
     // init main canvas
     s = new CanvasState(document.getElementById('canvas1'));
