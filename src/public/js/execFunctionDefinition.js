@@ -49,9 +49,9 @@ class sendMail extends ExecFunctionDefs {
         parameters.subject = 'testMail'
         console.log(parameters)
         Email.send({
-            Host: "smtp.infomaniak.ch",
-            Username: "luc@pharabod.com",
-            Password: "PassTBS11**!!",
+            Host: "smtp.*****.***",
+            Username: "***********",
+            Password: "***********",
             To: parameters.sendTo,
             From: "luc@pharabod.com",
             Subject: parameters.subject,
