@@ -1,4 +1,4 @@
-/*
+﻿/*
   Define ExecFunction class structure
  */
 
@@ -37,7 +37,7 @@ class ExecFunctionDefs {
 }
 
 class sendMail extends ExecFunctionDefs {
-    static definition='permet d\'envoyer un mail';
+    static definition='Envoyer un mail';
     constructor () {
         super()
     }
@@ -68,8 +68,38 @@ class sendMail extends ExecFunctionDefs {
     }
 }
 
+class askAQuestion extends ExecFunctionDefs {
+    static definition='Question utilisateur';
+    constructor () {
+        super()
+    }
+    async execute(parameters, runtime) {
+        parameters = super.execute(parameters, runtime);
+        let res = {responseCode:'', responseText:'', url:'', data:{}, headers: {}}
+        const request = async (parameters, runtime) => {
+            let result ={return:false}
+            const response = await prompt(parameters.question, parameters.default)
+            result = await response;
+
+            const setContext = new Function( 'return '+ JSON.stringify(runtime.getContext()) )
+            let context = setContext(parameters.context)
+
+            const callBack=new Function('answer',  parameters.script);
+            result = callBack(result);
+            console.log('SORTIE DE SCRIPT : ',result);
+            runtime.setContext(result.context)
+            return result.return
+
+            console.log(result);
+            return result
+        }
+        return await request(parameters, runtime)
+
+    }
+}
+
 class httpCode extends ExecFunctionDefs {
-    static definition='permet d\'avoir un code retour HTTP d\'un GET';
+    static definition='Code retour HTTP GET';
     constructor () {
         super()
     }
@@ -102,7 +132,7 @@ class httpCode extends ExecFunctionDefs {
 
 
 class apiGET extends ExecFunctionDefs {
-    static definition='permet de faire un appel d\'api GET';
+    static definition='Appel d\'api GET';
     constructor () {
         super()
     }
@@ -142,7 +172,7 @@ class apiGET extends ExecFunctionDefs {
 
 
 class apiPOST extends ExecFunctionDefs {
-    static definition='permet de faire un appel d\'api POST';
+    static definition='Appel d\'api POST';
     constructor () {
         super()
     }
@@ -154,7 +184,7 @@ class apiPOST extends ExecFunctionDefs {
 }
 
 class apiObjectExists extends ExecFunctionDefs {
-    static definition='permet vérifier qu\'un objet existe sur l\'API';
+    static definition='Objet existe sur l\'API';
     constructor () {
         super()
     }
@@ -168,7 +198,7 @@ class apiObjectExists extends ExecFunctionDefs {
 
 
 class script extends ExecFunctionDefs {
-    static definition='permet d\'exécuter du Javascript';
+    static definition='Exécuter du Javascript';
 
     /*
     "parameters" : {
@@ -200,6 +230,7 @@ apiPOST.register()
 apiObjectExists.register()
 script.register();
 httpCode.register();
+askAQuestion.register();
 
 /* ------------------------------------------------ */
 /*

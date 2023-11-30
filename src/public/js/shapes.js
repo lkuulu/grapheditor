@@ -2272,7 +2272,7 @@ let save = {
             "h": 70,
             "label": "one",
             "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "lkuulu@pharabod.com",
+            "parameters": "{\"sendTo\":\"lkuulu@pharabod.com\"}",
             "description": "",
             "function": "sendMail"
         },
@@ -2283,11 +2283,11 @@ let save = {
             "y": 420,
             "w": 220,
             "h": 90,
-            "label": "Return false",
+            "label": "Question utilisateur",
             "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{\"parameters\":\"\",\"script\":\"console.log(context); return {context:context, return:false}\"}",
+            "parameters": "{\n  \"question\": \"Ca va bien ?\",\"default\": false,\n  \"script\": \"console.log('la réponse est ',answer);return {return:answer}\"\n}",
             "description": "",
-            "function": "script",
+            "function": "askAQuestion",
             "trueOnLeft": true
         },
         {
@@ -2299,7 +2299,7 @@ let save = {
             "h": 90,
             "label": "return true",
             "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{\"parameters\":\"\",\"script\":\"console.log('POUET', context); return {context:context, return:true}\"}",
+            "parameters": "{\"parameters\":\"\",\"script\":\"console.log(context); return {context:context, return:false}\"}",
             "description": "",
             "function": "script",
             "trueOnLeft": true
