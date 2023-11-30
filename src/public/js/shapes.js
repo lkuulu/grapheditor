@@ -1719,8 +1719,17 @@ CanvasState.prototype.runFromShape = async function(shape) {
             result = await shape.exec(this.runtime)
 
             this.runtime.addTrace({[this.runtime.getTrace().length]: {shape, context, result} });
+            if (typeof result === 'string') {
+                if (result.toString().toLowerCase() === 'false') {
+                    result = false
+                }
+                if (result.toString().toLowerCase() === 'true') {
+                    result = true
+                }
+            }
             console.log("HERE THE RESULT", result)
         }
+        console.log(result===false, result===true)
             for (let i = 0; i < shape.lines.length; i++) {
                 if (shape.lines[i].destination !== shape) {
                     if  (((result===shape.trueOnLeft) && (shape.className==='Diamond') && (shape.lines[i].origineHandle===HANDLE.LEFT)) ||
