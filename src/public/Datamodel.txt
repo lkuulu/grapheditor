@@ -20,7 +20,7 @@ id_version
 id_procedure*
 date_Version
 
-*procédure
+*procï¿½dure
 Nom
 Version
 Symptome
@@ -32,8 +32,10 @@ Auteur
 date
 Procedure
 version
-Opérateur
+Opï¿½rateur
 Parametres_initiaux
 Resultat
+
+
 
 

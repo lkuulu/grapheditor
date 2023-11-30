@@ -136,9 +136,12 @@ let menu = [{
     img: 'images/saveimage.png',
     title: 'Execute function as a test',
     fun: function () {
-        for (let i=0; i<this.selections.length; i++) {
-            this.selections[i].exec()
+        s.run();
+/*
+        for (let i=0; i<s.selections.length; i++) {
+            s.selections[i].exec()
         }
+ */
     }
 }
 
@@ -934,6 +937,11 @@ Circle.prototype.drawStroke = function (ctx) {
     ctx.stroke();
 };
 
+Circle.prototype.exec = async function(runtime) {
+    //TODO implement
+    console.log('Start run for this graph algorithm')
+}
+
 
 // *****************************
 // **  Define Box as a Shape  **
@@ -1009,6 +1017,17 @@ Box.prototype.draw = function (ctx) {
 Box.prototype.drawStroke = function (ctx) {
     ctx.strokeRect(this.x, this.y, this.w, this.h);
 };
+
+Box.prototype.exec = async function(runtime) {
+    if (this.execFunction !== '') {
+        console.log('Run for this diamond')
+        var myExecClass = ExecFunctionDefs.classInstanceByName(ExecFunctionDefs.listFunctionsForPropertyEditor(), this.execFunction);
+        var myClass = new myExecClass;
+        return myClass.execute(JSON.parse(this.parameters),runtime)
+    }
+
+}
+
 
 // *****************************
 // **  Define Doc as a Shape  **
@@ -1097,6 +1116,16 @@ Doc.prototype.drawStroke = function (ctx) {
     ctx.stroke();
 };
 
+Doc.prototype.exec = async function(runtime) {
+    if (this.execFunction !== '') {
+        console.log('Run for this diamond')
+        var myExecClass = ExecFunctionDefs.classInstanceByName(ExecFunctionDefs.listFunctionsForPropertyEditor(), this.execFunction);
+        var myClass = new myExecClass;
+        return myClass.execute(JSON.parse(this.parameters),runtime)
+    }
+}
+
+
 
 // *********************************
 // **  Define Diamond as a Shape  **
@@ -1134,7 +1163,15 @@ Diamond.prototype.persistant = function () {
     };
 };
 
-Diamond.prototype.exec = function () {
+Diamond.prototype.exec = async function(runtime) {
+
+    if (this.execFunction !== '') {
+        console.log('Run for this diamond')
+        var myExecClass = ExecFunctionDefs.classInstanceByName(ExecFunctionDefs.listFunctionsForPropertyEditor(), this.execFunction);
+        var myClass = new myExecClass;
+        return myClass.execute(JSON.parse(this.parameters),runtime)
+    }
+
 
 }
 
@@ -1286,6 +1323,8 @@ function CanvasState(canvas) {
     this.isDel = false;
 
     this.lastCtxMenuPoint = null;
+
+    this.runtime = new Runtime();
 
     function linkToHandleIndex(linkIndex) {
         // convert Link index to handle Index
@@ -1647,6 +1686,60 @@ function CanvasState(canvas) {
     }, myState.interval);
 }
 
+CanvasState.prototype.run = async function () {
+    // find start
+
+    let initContext = {"exec":0}
+    this.runtime.start()
+    this.runtime.setContext(initContext)
+
+    console.log('Find starting shape')
+    for (let i = 0; i < this.shapes.length; i++) {
+       if (this.shapes[i].className==='Circle') {
+           this.runtime.addTrace({[this.runtime.getTrace().length]: {"shape":this.shapes[i],"context":initContext,"result":true}});
+           console.log(this.shapes[i].className)
+           await this.runFromShape(this.shapes[i]);
+       }
+    }
+    console.log('TRACE : ' , this.runtime.getTrace())
+}
+
+CanvasState.prototype.runFromShape = async function(shape) {
+    // If shape signature is not already
+
+    let context = this.runtime.getContext();
+    //console.log(context, shape.label)
+    if (!this.runtime.alreadyRunThis(shape, context)){
+        console.log(shape.label)
+        this.runtime.addShape(shape, context)
+        //console.log('stacktrace :',stacktrace)
+        let result
+        // follow arrows to next shape
+        if (shape.execFunction !== undefined) {
+            result = await shape.exec(this.runtime)
+
+            this.runtime.addTrace({[this.runtime.getTrace().length]: {shape, context, result} });
+            console.log("HERE THE RESULT", result)
+        }
+            for (let i = 0; i < shape.lines.length; i++) {
+                if (shape.lines[i].destination !== shape) {
+                    if  (((result===shape.trueOnLeft) && (shape.className==='Diamond') && (shape.lines[i].origineHandle===HANDLE.LEFT)) ||
+                        ((result!==shape.trueOnLeft) && (shape.className==='Diamond') && (shape.lines[i].origineHandle===HANDLE.RIGHT)) ||
+                        ((shape.className==='Diamond') && (shape.lines[i].origineHandle===HANDLE.BOTTOM)) ||
+                        (shape.className!=='Diamond') ) {
+                        await this.runFromShape(shape.lines[i].destination);
+                    }
+                } else {
+                    // console.log('ignore this line to ME')
+                }
+
+            }
+
+
+    } else {
+        console.log('already passed in :',shape)
+    }
+}
 
 
 CanvasState.prototype.exportJson = function () {
@@ -1824,7 +1917,7 @@ CanvasState.prototype.save = function () {
     $('#jsonModal').modal('show');
 }
 
-CanvasState.prototype.exec = function () {
+CanvasState.prototype.exec = async function () {
     console.log(this.parameters);
 }
 
@@ -2089,7 +2182,6 @@ function setGrid() {
     }
 }
 
-
 let save = {
     "w": 1000,
     "h": 1400,
@@ -2108,7 +2200,7 @@ let save = {
         {
             "name": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
             "type": "Circle",
-            "x": 460,
+            "x": 500,
             "y": 20,
             "w": 40,
             "h": 40,
@@ -2120,8 +2212,8 @@ let save = {
         {
             "name": "bb8d8252-f082-4a5b-98ec-2b462f13f270",
             "type": "Box",
-            "x": 640,
-            "y": 390,
+            "x": 760,
+            "y": 170,
             "w": 160,
             "h": 90,
             "label": "Answer: Yes \n then do ...",
@@ -2134,12 +2226,12 @@ let save = {
             "name": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
             "type": "Box",
             "x": 110,
-            "y": 240,
+            "y": 170,
             "w": 160,
             "h": 90,
             "label": "Answer is No \n so do ...",
             "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "qsdfqsdfqsd",
+            "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"console.log(res);console.log(res.headers);console.log(res.responseCode);console.log(data['@id']);return {return:true}\"\n}",
             "description": "",
             "function": "httpCode"
         },
@@ -2147,12 +2239,12 @@ let save = {
             "name": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
             "type": "Diamond",
             "x": 80,
-            "y": 440,
+            "y": 290,
             "w": 220,
             "h": 90,
             "label": "Another test\nwith a newline\nand another one",
             "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "test@t1t.fr",
+            "parameters": "{\"sendTo\":\"lkuulu@pharabod.com\"}",
             "description": "",
             "function": "sendMail",
             "trueOnLeft": true
@@ -2160,13 +2252,13 @@ let save = {
         {
             "name": "70fc814d-4151-43ec-9688-df8f72d3176a",
             "type": "Diamond",
-            "x": 440,
-            "y": 120,
+            "x": 442,
+            "y": 100,
             "w": 160,
             "h": 90,
             "label": "1st question\n so what ?",
             "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{        url:'https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1',\nscript:'console.log(\\'toto\\');console.log(\\'tata\\');console.log(\\'pouet\\',res.data);'\n    }",
+            "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"console.log(res);console.log(res.headers);console.log(res.responseCode);console.log(data['@id']);return {return:true}\"\n}",
             "description": "",
             "function": "apiGET",
             "trueOnLeft": true
@@ -2174,15 +2266,56 @@ let save = {
         {
             "name": "76397a1f-95c3-447a-b20a-3593e3a8ff14",
             "type": "Doc",
-            "x": 400,
-            "y": 250,
+            "x": 760,
+            "y": 310,
             "w": 160,
-            "h": 100,
+            "h": 70,
             "label": "one",
             "fill": "rgba(224, 236, 255, 0.8)",
             "parameters": "lkuulu@pharabod.com",
             "description": "",
             "function": "sendMail"
+        },
+        {
+            "name": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
+            "type": "Diamond",
+            "x": 80,
+            "y": 420,
+            "w": 220,
+            "h": 90,
+            "label": "Return false",
+            "fill": "rgba(224, 236, 255, 0.8)",
+            "parameters": "{\"parameters\":\"\",\"script\":\"console.log(context); return {context:context, return:false}\"}",
+            "description": "",
+            "function": "script",
+            "trueOnLeft": true
+        },
+        {
+            "name": "51140b77-0178-4ba6-b2d4-3289858538c5",
+            "type": "Diamond",
+            "x": 350,
+            "y": 450,
+            "w": 160,
+            "h": 90,
+            "label": "return true",
+            "fill": "rgba(224, 236, 255, 0.8)",
+            "parameters": "{\"parameters\":\"\",\"script\":\"console.log('POUET', context); return {context:context, return:true}\"}",
+            "description": "",
+            "function": "script",
+            "trueOnLeft": true
+        },
+        {
+            "name": "ebd5bc72-4f12-4e53-8646-7f4a5ec0dca8",
+            "type": "Doc",
+            "x": 340,
+            "y": 570,
+            "w": 160,
+            "h": 90,
+            "label": "STOP",
+            "fill": "rgba(224, 236, 255, 0.8)",
+            "parameters": "",
+            "description": "",
+            "function": ""
         }
     ],
     "lines": [
@@ -2212,9 +2345,29 @@ let save = {
             "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
         },
         {
-            "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
+            "origin": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
             "handle": 6,
+            "destination": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e"
+        },
+        {
+            "origin": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
+            "handle": 4,
+            "destination": "51140b77-0178-4ba6-b2d4-3289858538c5"
+        },
+        {
+            "origin": "51140b77-0178-4ba6-b2d4-3289858538c5",
+            "handle": 3,
+            "destination": "ebd5bc72-4f12-4e53-8646-7f4a5ec0dca8"
+        },
+        {
+            "origin": "51140b77-0178-4ba6-b2d4-3289858538c5",
+            "handle": 4,
             "destination": "76397a1f-95c3-447a-b20a-3593e3a8ff14"
+        },
+        {
+            "origin": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
+            "handle": 3,
+            "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
         }
     ]
 };
@@ -2262,8 +2415,6 @@ function init() {
     s = new CanvasState(document.getElementById('canvas1'));
     loadGraph(save)
     showPropertyEditor(s);
-
-    //console.log((new sendMail).execute({test:'toto', fill:1}))
 }
 
 /*
