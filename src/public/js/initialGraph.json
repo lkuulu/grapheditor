@@ -1,0 +1,88 @@
+﻿{
+  "w": 1000,
+  "h": 1400,
+  "label": "lab",
+  "description": "desc",
+  "parameters": "blah",
+  "grid": {
+    "size": 10,
+    "active": true,
+    "snap": true,
+    "color": "rgba(0,0,0,.1)"
+  },
+  "autosize": false,
+  "onlydeletechildren": true,
+  "shapes": [
+    {
+      "name": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
+      "type": "Circle",
+      "x": 400,
+      "y": 10,
+      "w": 40,
+      "h": 40,
+      "label": "start",
+      "fill": "#AAAAAA",
+      "parameters": "",
+      "description": ""
+    },
+    {
+      "name": "70fc814d-4151-43ec-9688-df8f72d3176a",
+      "type": "Diamond",
+      "x": 340,
+      "y": 90,
+      "w": 160,
+      "h": 90,
+      "label": "1st question\n so what ?",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"console.log(res);console.log(res.headers);console.log(res.responseCode);console.log(data['@id']);return {return:true}\"\n}",
+      "description": "",
+      "function": "apiGET",
+      "trueOnLeft": true
+    },
+    {
+      "name": "46b2d9b2-e798-4538-843b-91b02eae3635",
+      "type": "Diamond",
+      "x": 340,
+      "y": 210,
+      "w": 160,
+      "h": 90,
+      "label": "test bootstrap",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on toujours cette question, ok ? \", \"default\":\"false\",\"buttons\":{\"primary\":\"OK\",\"secondary\":\"KO\"},\n  \"script\": \"console.log('la réponse est ',answer);return {return:answer}\"\n}",
+      "description": "",
+      "function": "bootstrapAskAQuestion",
+      "trueOnLeft": true
+    },
+    {
+      "name": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
+      "type": "Diamond",
+      "x": 340,
+      "y": 330,
+      "w": 160,
+      "h": 90,
+      "label": "test bootstrap yesNo",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"type\":\"confirm\",\n  \"question\": \"oui ou non ?\",\"buttons\":{\"primary\":\"Oui\",\"secondary\":\"Non\"},\n  \"script\": \"console.log('la réponse est ',answer);return {return:answer}\"\n}",
+      "description": "",
+      "function": "bootstrapAskAQuestion",
+      "trueOnLeft": true
+    }
+  ],
+  "lines": [
+    {
+      "origin": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
+      "handle": 6,
+      "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
+    },
+    {
+      "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
+      "handle": 6,
+      "destination": "46b2d9b2-e798-4538-843b-91b02eae3635"
+    },
+    {
+      "origin": "46b2d9b2-e798-4538-843b-91b02eae3635",
+      "handle": 6,
+      "destination": "0a84e856-5cf1-4d5c-a07e-da4e782a3321"
+    }
+  ]
+}

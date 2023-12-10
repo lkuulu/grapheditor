@@ -164,17 +164,15 @@ var update;
 			if (getValueFuncs) { getValueFuncs[name] = function() {return $('#'+elemId).spectrum('get').toHexString();}; }
 
 		// If label (for read-only)
-    } else if (type === 'label') {
+    	} else if (type === 'label') {
 			if (typeof meta.description === 'string' && meta.description) {
 	                	valueHTML = '<label for="' + elemId + '" title="' + meta.description + '">' + value + '</label>';
 	            	} else {
 		                valueHTML = '<label for="' + elemId + '">' + value + '</label>';
 			}
-    } else if (type === 'textarea') {
-      valueHTML = '<textarea row=3 id="' + elemId + '" style="width:100%">' + value + '</textarea>';
+    	} else if (type === 'textarea') {
+      		valueHTML = '<textarea row=3 id="' + elemId + '" style="width:100%">' + value + '</textarea>';
 			if (postCreateInitFuncs) { postCreateInitFuncs.push( callBackValue('input', elemId, name, value, meta.options)); }
-
-
 
 		// Default is textbox
 		} else {

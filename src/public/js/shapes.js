@@ -1,4 +1,4 @@
-// By Simon Sarris
+﻿// By Simon Sarris
 // www.simonsarris.com
 // sarris@acm.org
 //
@@ -64,13 +64,8 @@ let direction = {
 };
 
 /* global values */
-execFunctions = {
-    'httpCode': 'Get http response code from url',
-    'apiObjectExists': 'API Object exists for url',
-    'mailTo': 'Send a mail to'
-};
 
-propertiesTypes = {
+let propertiesTypes = {
     'className': 'className',
     'x': 'int',
     'y': 'int',
@@ -1560,7 +1555,7 @@ function CanvasState(canvas) {
 
 
     window.addEventListener('keydown', function (e) {
-        console.log(e.keyCode);
+        //console.log(e.keyCode);
         switch (e.keyCode) {
             case 46:
                 if (e.shiftKey) {
@@ -1704,21 +1699,20 @@ CanvasState.prototype.run = async function () {
     console.log('TRACE : ' , this.runtime.getTrace())
 }
 
-CanvasState.prototype.runFromShape = async function(shape) {
+CanvasState.prototype.runFromShape = async function (shape) {
     // If shape signature is not already
 
     let context = this.runtime.getContext();
     //console.log(context, shape.label)
-    if (!this.runtime.alreadyRunThis(shape, context)){
+    if (!this.runtime.alreadyRunThis(shape, context)) {
         console.log(shape.label)
         this.runtime.addShape(shape, context)
-        //console.log('stacktrace :',stacktrace)
         let result
         // follow arrows to next shape
-        if (shape.execFunction !== undefined) {
+        if ((shape.execFunction !== undefined) && (shape.execFunction !== '')) {
             result = await shape.exec(this.runtime)
 
-            this.runtime.addTrace({[this.runtime.getTrace().length]: {shape, context, result} });
+            this.runtime.addTrace({[this.runtime.getTrace().length]: {shape, context, result}});
             if (typeof result === 'string') {
                 if (result.toString().toLowerCase() === 'false') {
                     result = false
@@ -1729,24 +1723,19 @@ CanvasState.prototype.runFromShape = async function(shape) {
             }
             console.log("HERE THE RESULT", result)
         }
-        console.log(result===false, result===true)
-            for (let i = 0; i < shape.lines.length; i++) {
-                if (shape.lines[i].destination !== shape) {
-                    if  (((result===shape.trueOnLeft) && (shape.className==='Diamond') && (shape.lines[i].origineHandle===HANDLE.LEFT)) ||
-                        ((result!==shape.trueOnLeft) && (shape.className==='Diamond') && (shape.lines[i].origineHandle===HANDLE.RIGHT)) ||
-                        ((shape.className==='Diamond') && (shape.lines[i].origineHandle===HANDLE.BOTTOM)) ||
-                        (shape.className!=='Diamond') ) {
-                        await this.runFromShape(shape.lines[i].destination);
-                    }
-                } else {
-                    // console.log('ignore this line to ME')
+        //console.log(result === false, result === true)
+        for (let i = 0; i < shape.lines.length; i++) {
+            if (shape.lines[i].destination !== shape) {
+                if (((result === shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.LEFT)) ||
+                    ((result !== shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.RIGHT)) ||
+                    ((shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.BOTTOM)) ||
+                    (shape.className !== 'Diamond')) {
+                    await this.runFromShape(shape.lines[i].destination);
                 }
-
             }
-
-
+        }
     } else {
-        console.log('already passed in :',shape)
+        console.log('already passed in :', shape)
     }
 }
 
@@ -1915,9 +1904,11 @@ function handleSaveButton(event) {
         $('#jsonModal').modal('hide');
     } catch (error) {
         alert('json invalid ! '+error.message)
-
     }
 }
+
+
+
 CanvasState.prototype.save = function () {
     console.log(document.querySelector('#save-json'))
     document.querySelector('#save-json').removeEventListener('click', handleSaveButton)
@@ -2191,195 +2182,6 @@ function setGrid() {
     }
 }
 
-let save = {
-    "w": 1000,
-    "h": 1400,
-    "label": "lab",
-    "description": "desc",
-    "parameters": "blah",
-    "grid": {
-        "size": 10,
-        "active": true,
-        "snap": true,
-        "color": "rgba(0,0,0,.1)"
-    },
-    "autosize": false,
-    "onlydeletechildren": true,
-    "shapes": [
-        {
-            "name": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
-            "type": "Circle",
-            "x": 500,
-            "y": 20,
-            "w": 40,
-            "h": 40,
-            "label": "start",
-            "fill": "#AAAAAA",
-            "parameters": "",
-            "description": ""
-        },
-        {
-            "name": "bb8d8252-f082-4a5b-98ec-2b462f13f270",
-            "type": "Box",
-            "x": 760,
-            "y": 170,
-            "w": 160,
-            "h": 90,
-            "label": "Answer: Yes \n then do ...",
-            "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "http://test.com/api",
-            "description": "",
-            "function": "apiPOST"
-        },
-        {
-            "name": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
-            "type": "Box",
-            "x": 110,
-            "y": 170,
-            "w": 160,
-            "h": 90,
-            "label": "Answer is No \n so do ...",
-            "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"console.log(res);console.log(res.headers);console.log(res.responseCode);console.log(data['@id']);return {return:true}\"\n}",
-            "description": "",
-            "function": "httpCode"
-        },
-        {
-            "name": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
-            "type": "Diamond",
-            "x": 80,
-            "y": 290,
-            "w": 220,
-            "h": 90,
-            "label": "Another test\nwith a newline\nand another one",
-            "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{\"sendTo\":\"lkuulu@pharabod.com\"}",
-            "description": "",
-            "function": "sendMail",
-            "trueOnLeft": true
-        },
-        {
-            "name": "70fc814d-4151-43ec-9688-df8f72d3176a",
-            "type": "Diamond",
-            "x": 442,
-            "y": 100,
-            "w": 160,
-            "h": 90,
-            "label": "1st question\n so what ?",
-            "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"console.log(res);console.log(res.headers);console.log(res.responseCode);console.log(data['@id']);return {return:true}\"\n}",
-            "description": "",
-            "function": "apiGET",
-            "trueOnLeft": true
-        },
-        {
-            "name": "76397a1f-95c3-447a-b20a-3593e3a8ff14",
-            "type": "Doc",
-            "x": 760,
-            "y": 310,
-            "w": 160,
-            "h": 70,
-            "label": "one",
-            "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{\"sendTo\":\"lkuulu@pharabod.com\"}",
-            "description": "",
-            "function": "sendMail"
-        },
-        {
-            "name": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
-            "type": "Diamond",
-            "x": 80,
-            "y": 420,
-            "w": 220,
-            "h": 90,
-            "label": "Question utilisateur",
-            "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{\n  \"question\": \"Ca va bien ?\",\"default\": false,\n  \"script\": \"console.log('la réponse est ',answer);return {return:answer}\"\n}",
-            "description": "",
-            "function": "askAQuestion",
-            "trueOnLeft": true
-        },
-        {
-            "name": "51140b77-0178-4ba6-b2d4-3289858538c5",
-            "type": "Diamond",
-            "x": 350,
-            "y": 450,
-            "w": 160,
-            "h": 90,
-            "label": "return true",
-            "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "{\"parameters\":\"\",\"script\":\"console.log(context); return {context:context, return:false}\"}",
-            "description": "",
-            "function": "script",
-            "trueOnLeft": true
-        },
-        {
-            "name": "ebd5bc72-4f12-4e53-8646-7f4a5ec0dca8",
-            "type": "Doc",
-            "x": 340,
-            "y": 570,
-            "w": 160,
-            "h": 90,
-            "label": "STOP",
-            "fill": "rgba(224, 236, 255, 0.8)",
-            "parameters": "",
-            "description": "",
-            "function": ""
-        }
-    ],
-    "lines": [
-        {
-            "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
-            "handle": 4,
-            "destination": "bb8d8252-f082-4a5b-98ec-2b462f13f270"
-        },
-        {
-            "origin": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
-            "handle": 6,
-            "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
-        },
-        {
-            "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
-            "handle": 3,
-            "destination": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d"
-        },
-        {
-            "origin": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
-            "handle": 6,
-            "destination": "cf3ff639-2944-430f-8ea1-22ab04eadf6c"
-        },
-        {
-            "origin": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
-            "handle": 3,
-            "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
-        },
-        {
-            "origin": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
-            "handle": 6,
-            "destination": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e"
-        },
-        {
-            "origin": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
-            "handle": 4,
-            "destination": "51140b77-0178-4ba6-b2d4-3289858538c5"
-        },
-        {
-            "origin": "51140b77-0178-4ba6-b2d4-3289858538c5",
-            "handle": 3,
-            "destination": "ebd5bc72-4f12-4e53-8646-7f4a5ec0dca8"
-        },
-        {
-            "origin": "51140b77-0178-4ba6-b2d4-3289858538c5",
-            "handle": 4,
-            "destination": "76397a1f-95c3-447a-b20a-3593e3a8ff14"
-        },
-        {
-            "origin": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
-            "handle": 3,
-            "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
-        }
-    ]
-};
 
 
 function loadGraph(save) {
@@ -2406,6 +2208,7 @@ function loadGraph(save) {
         initShapes[save.shapes[i].name].name = save.shapes[i].name
         initShapes[save.shapes[i].name].description = save.shapes[i].description
         initShapes[save.shapes[i].name].execFunction = save.shapes[i].function
+        initShapes[save.shapes[i].name].trueOnLeft = save.shapes[i].trueOnLeft
 //        console.log(save.shapes[i].parameters)
         initShapes[save.shapes[i].name].parameters = save.shapes[i].parameters
         s.addShape(initShapes[save.shapes[i].name])
@@ -2420,12 +2223,25 @@ function loadGraph(save) {
 
 }
 
-function init() {
-    // init main canvas
-    s = new CanvasState(document.getElementById('canvas1'));
+let save = {}
+
+function initCanvas() {
+    s = new CanvasState(document.getElementById('canvas1'))
     loadGraph(save)
-    showPropertyEditor(s);
+    showPropertyEditor(s)
+
 }
+function init() {
+    fetch('./js/initialGraph.json')
+        .then((response) => response.json())
+        .then((json) => {
+            save = json
+            initCanvas()
+        });
+}
+
+
+
 
 /*
 init Property editor on ready

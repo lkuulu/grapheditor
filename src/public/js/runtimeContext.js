@@ -11,6 +11,7 @@ class Runtime {
         this.context = {}
         this.stacktrace = []
         this.shapes = []
+        this.count=0
     }
 
     start() {

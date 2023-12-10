@@ -23,7 +23,7 @@ class ExecFunctionDefs {
         let options=['none']
 
         for (let i=0; i<this.set.length; i++) {
-            options.push({text:this.set[i].definition, value:this.set[i].name, class:this.set[i].registeredClass})
+            options.push({text:this.set[i].definition, value:this.set[i].name, class:this.set[i].registeredClass, jsonSchema:this.set[i].jsonSchema})
         }
         return options
     }
@@ -32,12 +32,13 @@ class ExecFunctionDefs {
     }
 
     static me(classToRegister) {
-        return {name: this.name, definition: this.definition, registeredClass:classToRegister}
+        return {name: this.name, definition: this.definition, registeredClass:classToRegister, jsonSchema: this.jsonSchema}
     }
 }
 
 class sendMail extends ExecFunctionDefs {
     static definition='Envoyer un mail';
+    static jsonSchema = {}
     constructor () {
         super()
     }
@@ -68,24 +69,123 @@ class sendMail extends ExecFunctionDefs {
     }
 }
 
+class bootstrapAskAQuestion extends ExecFunctionDefs {
+    static definition = 'Question utilisateur jolie';
+    static jsonSchema = {}
+
+    constructor() {
+        super()
+    }
+
+    async execute(parameters, runtime) {
+        parameters = super.execute(parameters, runtime);
+        console.log(parameters)
+        const request = async (parameters, runtime) => {
+            let result = {return: false}
+            let response = null
+
+            response = await this.showPrompt(parameters)
+
+            //response = await prompt(parameters.question, parameters.default)
+            result = await response;
+
+            // correct isTransitioning issue for opening many times
+            let modal = bootstrap.Modal.getInstance($('#promptModal'))
+            if (modal._isTransitioning) {
+                modal._isTransitioning = false
+            }
+            const setContext = new Function('return ' + JSON.stringify(runtime.getContext()))
+            let context = setContext(parameters.context)
+
+            const callBack = new Function('answer', 'context', parameters.script);
+
+            result = callBack(result, context);
+            console.log('SORTIE DE SCRIPT : ', result);
+            runtime.setContext(result.context)
+            return result.return
+
+            console.log(result);
+            return result
+        }
+        return await request(parameters, runtime)
+    }
+
+
+
+    showPrompt = async function (parameters) {
+        document.querySelector('#prompt-modal-secondary').removeEventListener('click' , function(){})
+        document.querySelector('#prompt-modal-primary').removeEventListener('click',function(){})
+
+        // prepare modal
+        let promptModal = document.getElementById('promptModal')
+
+        switch (parameters.type) {
+            case 'prompt':
+                promptModal.querySelector('.modal-body').style.display = 'block'
+                promptModal.querySelector('.modal-body input').value = parameters.default
+                break
+            case 'confirm':
+                promptModal.querySelector('.modal-body').style.display = 'none'
+                break
+        }
+
+        promptModal.querySelector('.modal-title').textContent = parameters.question
+        promptModal.querySelector('.btn-secondary').textContent = parameters.buttons.secondary
+        promptModal.querySelector('.btn-primary').textContent = parameters.buttons.primary
+
+        let promptModalIsHidden = false
+        document.querySelector('#prompt-modal-primary').removeEventListener('click',function(){})
+        promptModal.addEventListener('hidden.bs.modal', function (event) {
+            promptModalIsHidden = true
+        })
+
+        $('#promptModal').modal('show')
+
+        return new Promise(resolve => {
+            document.querySelector('#prompt-modal-secondary').addEventListener('click', async function() {
+                //let modal = bootstrap.Modal.getInstance($('#promptModal'))
+                $('#promptModal').modal('hide')
+                resolve((parameters.type==='prompt') ? parameters.default : parameters.buttons.secondary )
+            });
+            document.querySelector('#prompt-modal-primary').addEventListener('click', async function() {
+                $('#promptModal').modal('hide')
+                resolve((parameters.type==='prompt') ? $('#recipient-name').val() : parameters.buttons.primary )
+            });
+        })
+    }
+}
 class askAQuestion extends ExecFunctionDefs {
     static definition='Question utilisateur';
+    static jsonSchema = {}
     constructor () {
         super()
     }
     async execute(parameters, runtime) {
         parameters = super.execute(parameters, runtime);
-        let res = {responseCode:'', responseText:'', url:'', data:{}, headers: {}}
+console.log(parameters)
         const request = async (parameters, runtime) => {
             let result ={return:false}
-            const response = await prompt(parameters.question, parameters.default)
+            let response = null
+            switch(parameters.type) {
+                case 'prompt':
+                    response = await prompt(parameters.question, parameters.default)
+                    break
+                case 'confirm':
+                     response = await confirm(parameters.question)
+                    break
+
+
+            }
+
+            //response = await prompt(parameters.question, parameters.default)
             result = await response;
 
             const setContext = new Function( 'return '+ JSON.stringify(runtime.getContext()) )
             let context = setContext(parameters.context)
 
-            const callBack=new Function('answer',  parameters.script);
-            result = callBack(result);
+            const callBack=new Function('answer', 'context', parameters.script);
+
+            result = callBack(result, context);
             console.log('SORTIE DE SCRIPT : ',result);
             runtime.setContext(result.context)
             return result.return
@@ -100,6 +200,22 @@ class askAQuestion extends ExecFunctionDefs {
 
 class httpCode extends ExecFunctionDefs {
     static definition='Code retour HTTP GET';
+    static jsonSchema = {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+            "url": {
+                "type": "string"
+            },
+            "script": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "url",
+            "script"
+        ]
+    }
     constructor () {
         super()
     }
@@ -126,13 +242,13 @@ class httpCode extends ExecFunctionDefs {
             return result
         }
         return await request(parameters, runtime)
-
     }
 }
 
 
 class apiGET extends ExecFunctionDefs {
     static definition='Appel d\'api GET';
+    static jsonSchema = {}
     constructor () {
         super()
     }
@@ -173,6 +289,7 @@ class apiGET extends ExecFunctionDefs {
 
 class apiPOST extends ExecFunctionDefs {
     static definition='Appel d\'api POST';
+    static jsonSchema = {}
     constructor () {
         super()
     }
@@ -185,6 +302,7 @@ class apiPOST extends ExecFunctionDefs {
 
 class apiObjectExists extends ExecFunctionDefs {
     static definition='Objet existe sur l\'API';
+    static jsonSchema = {}
     constructor () {
         super()
     }
@@ -199,6 +317,7 @@ class apiObjectExists extends ExecFunctionDefs {
 
 class script extends ExecFunctionDefs {
     static definition='Exécuter du Javascript';
+    static jsonSchema = {}
 
     /*
     "parameters" : {
@@ -231,7 +350,7 @@ apiObjectExists.register()
 script.register();
 httpCode.register();
 askAQuestion.register();
-
+bootstrapAskAQuestion.register()
 /* ------------------------------------------------ */
 /*
 
