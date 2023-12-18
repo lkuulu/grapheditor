@@ -69,6 +69,8 @@ class sendMail extends ExecFunctionDefs {
     }
 }
 
+
+
 class bootstrapAskAQuestion extends ExecFunctionDefs {
     static definition = 'Question utilisateur jolie';
     static jsonSchema = {}
@@ -77,7 +79,8 @@ class bootstrapAskAQuestion extends ExecFunctionDefs {
         super()
     }
 
-    async execute(parameters, runtime) {
+
+async execute(parameters, runtime) {
         parameters = super.execute(parameters, runtime);
         console.log(parameters)
         const request = async (parameters, runtime) => {
@@ -91,9 +94,16 @@ class bootstrapAskAQuestion extends ExecFunctionDefs {
 
             // correct isTransitioning issue for opening many times
             let modal = bootstrap.Modal.getInstance($('#promptModal'))
+
+            $('#promptModal').modal('hide')
+            await new Promise(resolve => setTimeout(resolve, 400));
+            $('#promptModal').modal('dispose')
+/*
             if (modal._isTransitioning) {
                 modal._isTransitioning = false
             }
+ */
+
             const setContext = new Function('return ' + JSON.stringify(runtime.getContext()))
             let context = setContext(parameters.context)
 
@@ -102,21 +112,42 @@ class bootstrapAskAQuestion extends ExecFunctionDefs {
             result = callBack(result, context);
             console.log('SORTIE DE SCRIPT : ', result);
             runtime.setContext(result.context)
-            return result.return
 
-            console.log(result);
-            return result
+            return result.return
         }
         return await request(parameters, runtime)
     }
 
-
+    htmlFragment = function() {
+        return '<div class="modal fade" id="promptModal" tabindex="-1" aria-labelledby="promptModal" aria-hidden="true">\n' +
+            '\t<div class="modal-dialog">\n' +
+            '\t\t<div class="modal-content">\n' +
+            '\t\t\t<div class="modal-header">\n' +
+            '\t\t\t\t<h5 class="modal-title" id="promptModalLabel">New message</h5>\n' +
+            '\t\t\t\t<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>\n' +
+            '\t\t\t</div>\n' +
+            '\t\t\t<div class="modal-body">\n' +
+            '\t\t\t\t<form>\n' +
+            '\t\t\t\t\t<div class="mb-3">\n' +
+            '\t\t\t\t\t\t<label for="recipient-name" class="col-form-label"></label>\n' +
+            '\t\t\t\t\t\t<input type="text" class="form-control" id="recipient-name">\n' +
+            '\t\t\t\t\t</div>\n' +
+            '\t\t\t\t</form>\n' +
+            '\t\t\t</div>\n' +
+            '\t\t\t<div class="modal-footer">\n' +
+            '\t\t\t\t<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="prompt-modal-secondary">Close</button>\n' +
+            '\t\t\t\t<button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="prompt-modal-primary">Send message</button>\n' +
+            '\t\t\t</div>\n' +
+            '\t\t</div>\n' +
+            '\t</div>\n' +
+            '</div>\n'
+    }
 
     showPrompt = async function (parameters) {
-        document.querySelector('#prompt-modal-secondary').removeEventListener('click' , function(){})
-        document.querySelector('#prompt-modal-primary').removeEventListener('click',function(){})
-
         // prepare modal
+        let promptModalContainer =document.getElementById('promptModal-container')
+        promptModalContainer.innerHTML=this.htmlFragment()
+
         let promptModal = document.getElementById('promptModal')
 
         switch (parameters.type) {
@@ -128,28 +159,30 @@ class bootstrapAskAQuestion extends ExecFunctionDefs {
                 promptModal.querySelector('.modal-body').style.display = 'none'
                 break
         }
-
+        promptModal.modal('dispose')
         promptModal.querySelector('.modal-title').textContent = parameters.question
-        promptModal.querySelector('.btn-secondary').textContent = parameters.buttons.secondary
-        promptModal.querySelector('.btn-primary').textContent = parameters.buttons.primary
+        promptModal.querySelector('.btn-secondary').textContent = parameters.buttons.secondary.label
+        promptModal.querySelector('.btn-primary').textContent = parameters.buttons.primary.label
 
-        let promptModalIsHidden = false
-        document.querySelector('#prompt-modal-primary').removeEventListener('click',function(){})
-        promptModal.addEventListener('hidden.bs.modal', function (event) {
-            promptModalIsHidden = true
+        //TODO PB avec le removeEventListener
+/*
+        document.querySelector('#prompt-modal-primary').removeEventListener('click',async function() {
+            resolve((parameters.type==='prompt') ? $('#recipient-name').val() : parameters.buttons.primary.value )
+        });
+        document.querySelector('#prompt-modal-secondary').removeEventListener('click',async function() {
+            resolve((parameters.type==='prompt') ? parameters.default : parameters.buttons.secondary.value )
         })
 
+
+ */
         $('#promptModal').modal('show')
 
         return new Promise(resolve => {
-            document.querySelector('#prompt-modal-secondary').addEventListener('click', async function() {
-                //let modal = bootstrap.Modal.getInstance($('#promptModal'))
-                $('#promptModal').modal('hide')
-                resolve((parameters.type==='prompt') ? parameters.default : parameters.buttons.secondary )
-            });
             document.querySelector('#prompt-modal-primary').addEventListener('click', async function() {
-                $('#promptModal').modal('hide')
-                resolve((parameters.type==='prompt') ? $('#recipient-name').val() : parameters.buttons.primary )
+                resolve((parameters.type==='prompt') ? $('#recipient-name').val() : parameters.buttons.primary.value )
+            });
+            document.querySelector('#prompt-modal-secondary').addEventListener('click', async function() {
+                resolve((parameters.type==='prompt') ? parameters.default : parameters.buttons.secondary.value )
             });
         })
     }
@@ -232,14 +265,22 @@ class httpCode extends ExecFunctionDefs {
                     res.url = response.url
                     res.responseCode = response.status
                     res.responseText = response.statusText
-                    return res.responseCode
+
+                    const setContext = new Function('return ' + JSON.stringify(runtime.getContext()))
+                    let context = setContext(parameters.context)
+                    const callBack=new Function('res',  'context', parameters.script);
+                    let result = callBack(res, context)
+                    runtime.setContext(result.context)
+                    return result
                 }).catch(error => {
                     console.error(error);
                     return result
                 });
             result = await response;
             console.log(result);
-            return result
+
+            runtime.setContext(result.context)
+            return result.return
         }
         return await request(parameters, runtime)
     }
@@ -270,15 +311,25 @@ class apiGET extends ExecFunctionDefs {
                 }).then(function(data) {
                     //console.log(data)
                     res.data = data;
-                    const callBack=new Function('res', 'data', parameters.script);
-                    return callBack(res, res.data).return;
+
+                    const setContext = new Function('return ' + JSON.stringify(runtime.getContext()))
+                    let context = setContext(runtime.getContext())
+                    const callBack=new Function('res', 'data', 'context', parameters.script);
+
+                    let result = callBack(res, res.data, context)
+
+                    runtime.setContext(result.context)
+
+                    return result;
                 }).catch(error => {
                     console.error(error);
                     return result
                 });
             result = await response;
 //          console.log(result);
-            return result
+            runtime.setContext(result.context)
+
+            return result.return
         }
         return await request(parameters, runtime)
 

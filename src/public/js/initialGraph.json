@@ -26,29 +26,15 @@
       "description": ""
     },
     {
-      "name": "70fc814d-4151-43ec-9688-df8f72d3176a",
-      "type": "Diamond",
-      "x": 340,
-      "y": 90,
-      "w": 160,
-      "h": 90,
-      "label": "1st question\n so what ?",
-      "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"console.log(res);console.log(res.headers);console.log(res.responseCode);console.log(data['@id']);return {return:true}\"\n}",
-      "description": "",
-      "function": "apiGET",
-      "trueOnLeft": true
-    },
-    {
       "name": "46b2d9b2-e798-4538-843b-91b02eae3635",
       "type": "Diamond",
-      "x": 340,
-      "y": 210,
+      "x": 240,
+      "y": 170,
       "w": 160,
       "h": 90,
-      "label": "test bootstrap",
+      "label": "on bloucle ?\nOui ou non ",
       "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on toujours cette question, ok ? \", \"default\":\"false\",\"buttons\":{\"primary\":\"OK\",\"secondary\":\"KO\"},\n  \"script\": \"console.log('la réponse est ',answer);return {return:answer}\"\n}",
+      "parameters": "{\"type\":\"confirm\",\n  \"question\": \"on boucle oui ou non (2) ?\",\"buttons\":{\"primary\":{\"label\":\"Oui\",\"value\":true},\"secondary\":{\"label\":\"Non\", \"value\":false}},\n  \"script\": \"console.log('la réponse est ',answer);return {context:context, return:answer}\"\n}",
       "description": "",
       "function": "bootstrapAskAQuestion",
       "trueOnLeft": true
@@ -56,13 +42,13 @@
     {
       "name": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
       "type": "Diamond",
-      "x": 340,
-      "y": 330,
+      "x": 420,
+      "y": 340,
       "w": 160,
       "h": 90,
-      "label": "test bootstrap yesNo",
+      "label": "Repose tjs question",
       "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"type\":\"confirm\",\n  \"question\": \"oui ou non ?\",\"buttons\":{\"primary\":\"Oui\",\"secondary\":\"Non\"},\n  \"script\": \"console.log('la réponse est ',answer);return {return:answer}\"\n}",
+      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on repose toujours cette question, ok ? \", \"default\":\"true\",\"buttons\":{\"primary\":{\"label\":\"Valider\", \"value\":true},\"secondary\":{\"label\":\"Annuler\", \"value\":false}},\n  \"script\": \"console.log('la réponse est ',answer);return {context:context, return:answer}\"\n}",
       "description": "",
       "function": "bootstrapAskAQuestion",
       "trueOnLeft": true
@@ -72,16 +58,21 @@
     {
       "origin": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
       "handle": 6,
-      "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
+      "destination": "46b2d9b2-e798-4538-843b-91b02eae3635"
     },
     {
-      "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
-      "handle": 6,
+      "origin": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
+      "handle": 3,
+      "destination": "0a84e856-5cf1-4d5c-a07e-da4e782a3321"
+    },
+    {
+      "origin": "46b2d9b2-e798-4538-843b-91b02eae3635",
+      "handle": 3,
       "destination": "46b2d9b2-e798-4538-843b-91b02eae3635"
     },
     {
       "origin": "46b2d9b2-e798-4538-843b-91b02eae3635",
-      "handle": 6,
+      "handle": 4,
       "destination": "0a84e856-5cf1-4d5c-a07e-da4e782a3321"
     }
   ]

@@ -1,4 +1,6 @@
 const MAX_EXECUTION_COUNT = 20
+const MAX_SAME_EXECUTION_COUNT = 5
+
 class Runtime {
     constructor() {
         this.context = {}
@@ -19,17 +21,27 @@ class Runtime {
     }
 
     alreadyRunThis(shape, context) {
-        let uniqueIdentifier = [shape.name , JSON.stringify(context)]
+        let uniqueIdentifier = [shape.name , JSON.stringify(context), 0]
         // abort if execution count > 200
         this.count++
         console.log(this.count, uniqueIdentifier)
-        return !(this.count<MAX_EXECUTION_COUNT) || this.shapes.some(function(item) {
-            return item[0]===uniqueIdentifier[0] && item[1]===uniqueIdentifier[1]
-        })
+
+        // TODO faire un bouton d'interruption de run
+
+        let alreadyRunThisItem = this.shapes.filter((item) => item[0]===uniqueIdentifier[0] && item[1]===uniqueIdentifier[1])
+        if (alreadyRunThisItem.length>0) {
+            alreadyRunThisItem[0][2]++
+        } else
+            this.addShape(uniqueIdentifier)
+
+        console.log(this.shapes);
+        return (this.count>MAX_EXECUTION_COUNT) ||
+               ((alreadyRunThisItem.length>0) && alreadyRunThisItem[0][2]>=MAX_SAME_EXECUTION_COUNT)
+
     }
 
-    addShape(shape, context) {
-        this.shapes.push([shape.name , JSON.stringify(context)])
+    addShape(uniqueIdentifier) {
+        this.shapes.push(uniqueIdentifier)
     }
 
     addTrace(trace) {

@@ -1706,7 +1706,6 @@ CanvasState.prototype.runFromShape = async function (shape) {
     //console.log(context, shape.label)
     if (!this.runtime.alreadyRunThis(shape, context)) {
         console.log(shape.label)
-        this.runtime.addShape(shape, context)
         let result
         // follow arrows to next shape
         if ((shape.execFunction !== undefined) && (shape.execFunction !== '')) {
@@ -1725,7 +1724,7 @@ CanvasState.prototype.runFromShape = async function (shape) {
         }
         //console.log(result === false, result === true)
         for (let i = 0; i < shape.lines.length; i++) {
-            if (shape.lines[i].destination !== shape) {
+            if (shape.lines[i].origin === shape) {
                 if (((result === shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.LEFT)) ||
                     ((result !== shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.RIGHT)) ||
                     ((shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.BOTTOM)) ||
@@ -1735,7 +1734,7 @@ CanvasState.prototype.runFromShape = async function (shape) {
             }
         }
     } else {
-        console.log('already passed in :', shape)
+        console.log('already passed '+MAX_SAME_EXECUTION_COUNT+' times in :', shape)
     }
 }
 
