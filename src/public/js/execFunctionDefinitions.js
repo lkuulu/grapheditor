@@ -97,7 +97,7 @@ async execute(parameters, runtime) {
 
             $('#promptModal').modal('hide')
             await new Promise(resolve => setTimeout(resolve, 400));
-            $('#promptModal').modal('dispose')
+
 /*
             if (modal._isTransitioning) {
                 modal._isTransitioning = false
@@ -159,7 +159,9 @@ async execute(parameters, runtime) {
                 promptModal.querySelector('.modal-body').style.display = 'none'
                 break
         }
-        promptModal.modal('dispose')
+
+        $('#promptModal').modal("dispose")
+
         promptModal.querySelector('.modal-title').textContent = parameters.question
         promptModal.querySelector('.btn-secondary').textContent = parameters.buttons.secondary.label
         promptModal.querySelector('.btn-primary').textContent = parameters.buttons.primary.label

@@ -199,8 +199,8 @@ function Line(origin, origineHandle, destination) {
     this.destination.parents.push(origin);
 
     // destinationHandle is always top
-    this.origin.addLine(this);
-    this.destination.addLine(this);
+    this.origin.addOriginLine(this);
+    this.destination.addDestinationLine(this);
 
     this.showBtn = false;
 
@@ -535,6 +535,8 @@ function Shape(parent, x, y, w, h, label, fill) {
     this.parents = [];
     this.children = [];
     this.lines = [];
+    this.destinationLines = [];
+    this.originLines = [];
     this.parent = parent;
     this.parameters = '';
 
@@ -564,9 +566,23 @@ Shape.prototype.delLine = function (line) {
     }
 };
 
+
+
 Shape.prototype.addLine = function (line) {
     this.lines.push(line);
 };
+
+Shape.prototype.addDestinationLine = function (line) {
+    if (this===line.destination) {
+        this.destinationLines.push(line);
+    }
+};
+
+Shape.prototype.addOriginLine = function (line) {
+    if (this===line.origin) {
+        this.originLines.push(line);
+    }
+}
 
 Shape.prototype.drawLabel = function (ctx) {
     let lineheight = 13;
@@ -1723,13 +1739,13 @@ CanvasState.prototype.runFromShape = async function (shape) {
             console.log("HERE THE RESULT", result)
         }
         //console.log(result === false, result === true)
-        for (let i = 0; i < shape.lines.length; i++) {
-            if (shape.lines[i].origin === shape) {
-                if (((result === shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.LEFT)) ||
-                    ((result !== shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.RIGHT)) ||
-                    ((shape.className === 'Diamond') && (shape.lines[i].origineHandle === HANDLE.BOTTOM)) ||
+        for (let i = 0; i < shape.originLines.length; i++) {
+            if (shape.originLines[i].origin === shape) {
+                if (((result === shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.originLines[i].origineHandle === HANDLE.LEFT)) ||
+                    ((result !== shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.originLines[i].origineHandle === HANDLE.RIGHT)) ||
+                    ((shape.className === 'Diamond') && (shape.originLines[i].origineHandle === HANDLE.BOTTOM)) ||
                     (shape.className !== 'Diamond')) {
-                    await this.runFromShape(shape.lines[i].destination);
+                    await this.runFromShape(shape.originLines[i].destination);
                 }
             }
         }
