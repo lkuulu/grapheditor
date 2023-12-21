@@ -44,11 +44,11 @@ class sendMail extends ExecFunctionDefs {
     }
     async execute(parameters, runtime) {
         parameters = super.execute(parameters, runtime);
-        console.log(this.name, 'execute', parameters);
+        logger.debug.log(this.name, 'execute', parameters);
         /*
                 parameters.body = 'monbody'
                 parameters.subject = 'testMail'
-                console.log(parameters)
+                logger.debug.log(parameters)
                 Email.send({
                     Host: "smtp.*****.***",
                     Username: "***********",
@@ -60,7 +60,7 @@ class sendMail extends ExecFunctionDefs {
                 }).then(
                     message => {
                         parameters.result = 'OK'
-                        console.log("mail sent successfully")
+                        logger.debug.log("mail sent successfully")
                     }
                 );
                 */
@@ -82,7 +82,7 @@ class bootstrapAskAQuestion extends ExecFunctionDefs {
 
 async execute(parameters, runtime) {
         parameters = super.execute(parameters, runtime);
-        console.log(parameters)
+        logger.debug.log(parameters)
         const request = async (parameters, runtime) => {
             let result = {return: false}
             let response = null
@@ -107,10 +107,10 @@ async execute(parameters, runtime) {
             const setContext = new Function('return ' + JSON.stringify(runtime.getContext()))
             let context = setContext(parameters.context)
 
-            const callBack = new Function('answer', 'context', parameters.script);
+            const callBack = new Function('answer', 'context',  parameters.script);
 
             result = callBack(result, context);
-            console.log('SORTIE DE SCRIPT : ', result);
+            logger.debug.log('SORTIE DE SCRIPT : ', result);
             runtime.setContext(result.context)
 
             return result.return
@@ -144,8 +144,14 @@ async execute(parameters, runtime) {
     }
 
     showPrompt = async function (parameters) {
-        // prepare modal
+        // prepare modal container
         let promptModalContainer =document.getElementById('promptModal-container')
+        if (promptModalContainer===null) {
+            // create container in body if not exists
+            promptModalContainer = document.createElement('div');
+            promptModalContainer.id='promptModal-container'
+            document.body.appendChild(promptModalContainer);
+        }
         promptModalContainer.innerHTML=this.htmlFragment()
 
         let promptModal = document.getElementById('promptModal')
@@ -159,24 +165,10 @@ async execute(parameters, runtime) {
                 promptModal.querySelector('.modal-body').style.display = 'none'
                 break
         }
-
         $('#promptModal').modal("dispose")
-
         promptModal.querySelector('.modal-title').textContent = parameters.question
         promptModal.querySelector('.btn-secondary').textContent = parameters.buttons.secondary.label
         promptModal.querySelector('.btn-primary').textContent = parameters.buttons.primary.label
-
-        //TODO PB avec le removeEventListener
-/*
-        document.querySelector('#prompt-modal-primary').removeEventListener('click',async function() {
-            resolve((parameters.type==='prompt') ? $('#recipient-name').val() : parameters.buttons.primary.value )
-        });
-        document.querySelector('#prompt-modal-secondary').removeEventListener('click',async function() {
-            resolve((parameters.type==='prompt') ? parameters.default : parameters.buttons.secondary.value )
-        })
-
-
- */
         $('#promptModal').modal('show')
 
         return new Promise(resolve => {
@@ -197,7 +189,7 @@ class askAQuestion extends ExecFunctionDefs {
     }
     async execute(parameters, runtime) {
         parameters = super.execute(parameters, runtime);
-console.log(parameters)
+logger.debug.log(parameters)
         const request = async (parameters, runtime) => {
             let result ={return:false}
             let response = null
@@ -218,14 +210,14 @@ console.log(parameters)
             const setContext = new Function( 'return '+ JSON.stringify(runtime.getContext()) )
             let context = setContext(parameters.context)
 
-            const callBack=new Function('answer', 'context', parameters.script);
+            const callBack=new Function('answer', 'context',  parameters.script);
 
             result = callBack(result, context);
-            console.log('SORTIE DE SCRIPT : ',result);
+            logger.debug.log('SORTIE DE SCRIPT : ',result);
             runtime.setContext(result.context)
             return result.return
 
-            console.log(result);
+            logger.debug.log(result);
             return result
         }
         return await request(parameters, runtime)
@@ -279,7 +271,7 @@ class httpCode extends ExecFunctionDefs {
                     return result
                 });
             result = await response;
-            console.log(result);
+            logger.debug.log(result);
 
             runtime.setContext(result.context)
             return result.return
@@ -311,7 +303,7 @@ class apiGET extends ExecFunctionDefs {
                     response.headers.forEach(function(val, key) { var jsonObj = {}; jsonObj[key]=val; Object.assign(res.headers,jsonObj); });
                     return response.json(); //text();
                 }).then(function(data) {
-                    //console.log(data)
+                    //logger.debug.log(data)
                     res.data = data;
 
                     const setContext = new Function('return ' + JSON.stringify(runtime.getContext()))
@@ -328,7 +320,7 @@ class apiGET extends ExecFunctionDefs {
                     return result
                 });
             result = await response;
-//          console.log(result);
+//          logger.debug.log(result);
             runtime.setContext(result.context)
 
             return result.return
@@ -348,7 +340,7 @@ class apiPOST extends ExecFunctionDefs {
     }
     async execute(parameters, runtime) {
         parameters = super.execute(parameters, runtime);
-        console.log(this.name, 'execute', parameters);
+        logger.debug.log(this.name, 'execute', parameters);
         return parameters
     }
 }
@@ -362,7 +354,7 @@ class apiObjectExists extends ExecFunctionDefs {
 
     async execute(parameters, runtime) {
         parameters = super.execute(parameters, runtime)
-        console.log(this.name, 'execute', parameters)
+        logger.debug.log(this.name, 'execute', parameters)
         return parameters
     }
 }
@@ -390,7 +382,7 @@ class script extends ExecFunctionDefs {
 
         const callBack=new Function('context',  parameters.script);
         let result = callBack(context);
-        console.log('SORTIE DE SCRIPT : ',result);
+        logger.debug.log('SORTIE DE SCRIPT : ',result);
         runtime.setContext(result.context)
         return result.return
     }
@@ -414,7 +406,7 @@ var myClass = new myExecClass;
 
 let parameters = {
     "parameters":JSON.stringify({"url":"http://test.test.com","monParam1":false}),
-    "script":"console.log(context); context.i++;if (context.i>10) {context.stop=true;console.log('stop received')} ;return {context:context, return:true}"
+    "script":"logger.debug.log(context); context.i++;if (context.i>10) {context.stop=true;logger.debug.log('stop received')} ;return {context:context, return:true}"
 }
 let runtime = new Runtime()
 
@@ -422,7 +414,7 @@ runtime.setContext({"i":0, "stop":false})
 
 while ((runtime.getContext().stop!==true) && (runtime.getContext().i<12)) {
     myClass.execute(parameters, runtime)
-    console.log('context after:',runtime.getContext())
+    logger.debug.log('context after:',runtime.getContext())
 }
 */
 
@@ -435,7 +427,7 @@ let monGet = new apiGET()
 monGet.execute(
     {
         url:'https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1',
-        script:'console.log(\'toto\');console.log(\'tata\');console.log(\'pouet\',res.data);'
+        script:'logger.debug.log(\'toto\');logger.debug.log(\'tata\');logger.debug.log(\'pouet\',res.data);'
     }
 )
 
@@ -443,11 +435,11 @@ monGet.execute(
 /*
 var myClassName = 'apiGET';
 let monGet = eval("new "+ myClassName)
-console.log(monGet);
+logger.debug.log(monGet);
 
 monGet.execute({
     url:'https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1',
-    script:'console.log(res);console.log(res.headers);console.log(res.statusCode);console.log(data[\'@id\']);return true'
+    script:'logger.debug.log(res);logger.debug.log(res.headers);logger.debug.log(res.statusCode);logger.debug.log(data[\'@id\']);return true'
 })
 
  */

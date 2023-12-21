@@ -142,12 +142,6 @@ let menu = [{
 
 ];
 
-/*
-function consolelog(logs) {
-//    console.log(logs);
-    document.getElementById('log').innerHTML = logs;
-}
-*/
 
 function Point(x, y) {
     this.x = x;
@@ -534,9 +528,11 @@ function Shape(parent, x, y, w, h, label, fill) {
     this.fillStyle = 'black';
     this.parents = [];
     this.children = [];
-    this.lines = [];
+    //this.lines = [];
+
     this.destinationLines = [];
     this.originLines = [];
+
     this.parent = parent;
     this.parameters = '';
 
@@ -545,43 +541,61 @@ function Shape(parent, x, y, w, h, label, fill) {
     this.dragoffy = 0;
 }
 
-Shape.prototype.destroy = function () {
-    for (let i = this.lines.length - 1; i >= 0; i--) {
-        if (i < this.lines.length)
-            this.lines[i].destroy();
-        //this.lines.splice(i, 1);
+Shape.prototype.destroyLinesForArray = function (lines) {
+    for (let i = lines.length - 1; i >= 0; i--) {
+        if (i < lines.length)
+            lines[i].destroy();
     }
+}
+
+Shape.prototype.destroy = function () {
+    this.destroyLinesForArray(this.originLines)
+    this.destroyLinesForArray(this.destinationLines)
 };
 
 Shape.prototype.delLine = function (line) {
+    // in the Full graph
     let index = this.parent.lines.indexOf(line);
     if (index > -1) {
-        //this.lines[index].destroy();
         this.parent.lines.splice(index, 1);
     }
-    index = this.lines.indexOf(line);
+
+    // and for this shape
+    index = this.originLines.indexOf(line);
     if (index > -1) {
-        //this.lines[index].destroy();
-        this.lines.splice(index, 1);
+        this.originLines.splice(index, 1);
+    }
+    index = this.destinationLines.indexOf(line);
+    if (index > -1) {
+        this.destinationLines.splice(index, 1);
     }
 };
 
 
 
+/*
 Shape.prototype.addLine = function (line) {
     this.lines.push(line);
 };
 
+ */
+
 Shape.prototype.addDestinationLine = function (line) {
+    // destinationLines array is used for run the correct path
     if (this===line.destination) {
         this.destinationLines.push(line);
     }
+    // lines array is used for showing delete buttons on the lines
+    //this.lines.push(line);
 };
 
 Shape.prototype.addOriginLine = function (line) {
+    // destinationLines array is used for run the correct path
     if (this===line.origin) {
         this.originLines.push(line);
     }
+    // lines array is used for showing delete buttons on the lines
+    //this.lines.push(line);
 }
 
 Shape.prototype.drawLabel = function (ctx) {
@@ -592,10 +606,10 @@ Shape.prototype.drawLabel = function (ctx) {
     ctx.textBaseline = 'middle';
 
 
-    let lines = this.label.split('\n');
+    let labelLines = this.label.split('\n');
 
-    for (let i = 0; i < lines.length; i++)
-        ctx.fillText(lines[i], this.x + this.w / 2, this.y + this.h / 2 - (lineheight * (lines.length - 1) / 2) + (i * lineheight));
+    for (let i = 0; i < labelLines.length; i++)
+        ctx.fillText(labelLines[i], this.x + this.w / 2, this.y + this.h / 2 - (lineheight * (labelLines.length - 1) / 2) + (i * lineheight));
 };
 
 // Determine if shape is contained in selectFrame Rect
@@ -661,14 +675,14 @@ Linkable.prototype.drawLinks = function (ctx) {
         ctx.fillRect(cur.x, cur.y, this.myLinkBoxSize, this.myLinkBoxSize);
     }
 
-    for (let i = 0; i < this.lines.length; i++) {
-        this.lines[i].showBtn =  this.parent.onlydeletechildren ? (this.lines[i].origin === this) : true;
+    for (let i = 0; i < this.originLines.length; i++) {
+        this.originLines[i].showBtn =  this.parent.onlydeletechildren ? (this.originLines[i].origin === this) : true;
     }
 };
 
 Linkable.prototype.hideBtns = function () {
-    for (let i = 0; i < this.lines.length; i++) {
-        this.lines[i].showBtn = false;
+    for (let i = 0; i < this.originLines.length; i++) {
+        this.originLines[i].showBtn = false;
     }
 
 };
@@ -950,7 +964,7 @@ Circle.prototype.drawStroke = function (ctx) {
 
 Circle.prototype.exec = async function(runtime) {
     //TODO implement
-    console.log('Start run for this graph algorithm')
+    logger.debug.log('Start run for this graph algorithm')
 }
 
 
@@ -1031,7 +1045,7 @@ Box.prototype.drawStroke = function (ctx) {
 
 Box.prototype.exec = async function(runtime) {
     if (this.execFunction !== '') {
-        console.log('Run for this diamond')
+        logger.debug.log('Run for this diamond')
         var myExecClass = ExecFunctionDefs.classInstanceByName(ExecFunctionDefs.listFunctionsForPropertyEditor(), this.execFunction);
         var myClass = new myExecClass;
         return myClass.execute(JSON.parse(this.parameters),runtime)
@@ -1129,7 +1143,7 @@ Doc.prototype.drawStroke = function (ctx) {
 
 Doc.prototype.exec = async function(runtime) {
     if (this.execFunction !== '') {
-        console.log('Run for this diamond')
+        logger.debug.log('Run for this diamond')
         var myExecClass = ExecFunctionDefs.classInstanceByName(ExecFunctionDefs.listFunctionsForPropertyEditor(), this.execFunction);
         var myClass = new myExecClass;
         return myClass.execute(JSON.parse(this.parameters),runtime)
@@ -1177,7 +1191,7 @@ Diamond.prototype.persistant = function () {
 Diamond.prototype.exec = async function(runtime) {
 
     if (this.execFunction !== '') {
-        console.log('Run for this diamond')
+        logger.debug.log('Run for this diamond')
         var myExecClass = ExecFunctionDefs.classInstanceByName(ExecFunctionDefs.listFunctionsForPropertyEditor(), this.execFunction);
         var myClass = new myExecClass;
         return myClass.execute(JSON.parse(this.parameters),runtime)
@@ -1467,7 +1481,7 @@ function CanvasState(canvas) {
         // stop select frame drawing
         myState.selectFrame = null;
 
-        // havent returned means we have failed to select anything.
+        // haven't returned means we have failed to select anything.
         // If there was an object selected, we deselect it
         for (let i = myState.selections.length - 1; i >= 0; i--) {
             myState.selections[i].hideBtns();
@@ -1488,7 +1502,7 @@ function CanvasState(canvas) {
         let mx = mouse.x;
         let my = mouse.y;
 
-        //console.log('dragging', myState.dragging, 'isSelectDrag(', myState.isSelectDrag ,',',myState.expectResize,') isResizeDrag', myState.isResizeDrag ,'isLinkDrag', myState.isLinkDrag );
+        //logger.debug.log('dragging', myState.dragging, 'isSelectDrag(', myState.isSelectDrag ,',',myState.expectResize,') isResizeDrag', myState.isResizeDrag ,'isLinkDrag', myState.isLinkDrag );
         if (myState.dragging) {
             // We don't want to drag the object by its top-left corner, we want to drag it
             // from where we clicked. That's why we saved the offset and use it here
@@ -1571,7 +1585,7 @@ function CanvasState(canvas) {
 
 
     window.addEventListener('keydown', function (e) {
-        //console.log(e.keyCode);
+        //logger.debug.log(e.keyCode);
         switch (e.keyCode) {
             case 46:
                 if (e.shiftKey) {
@@ -1704,24 +1718,25 @@ CanvasState.prototype.run = async function () {
     this.runtime.start()
     this.runtime.setContext(initContext)
 
-    console.log('Find starting shape')
+    logger.debug.log('Find starting shape')
     for (let i = 0; i < this.shapes.length; i++) {
        if (this.shapes[i].className==='Circle') {
            this.runtime.addTrace({[this.runtime.getTrace().length]: {"shape":this.shapes[i],"context":initContext,"result":true}});
-           console.log(this.shapes[i].className)
+           logger.debug.log(this.shapes[i].className)
            await this.runFromShape(this.shapes[i]);
        }
     }
-    console.log('TRACE : ' , this.runtime.getTrace())
+    logger.debug.log('TRACE : ' , this.runtime.getTrace())
 }
 
 CanvasState.prototype.runFromShape = async function (shape) {
     // If shape signature is not already
 
     let context = this.runtime.getContext();
-    //console.log(context, shape.label)
+    //logger.debug.log(context, shape.label)
     if (!this.runtime.alreadyRunThis(shape, context)) {
-        console.log(shape.label)
+        
+        //logger.debug.log(shape.label)
         let result
         // follow arrows to next shape
         if ((shape.execFunction !== undefined) && (shape.execFunction !== '')) {
@@ -1736,9 +1751,9 @@ CanvasState.prototype.runFromShape = async function (shape) {
                     result = true
                 }
             }
-            console.log("HERE THE RESULT", result)
+            logger.debug.log("HERE THE RESULT", result)
         }
-        //console.log(result === false, result === true)
+        //logger.debug.log(result === false, result === true)
         for (let i = 0; i < shape.originLines.length; i++) {
             if (shape.originLines[i].origin === shape) {
                 if (((result === shape.trueOnLeft) && (shape.className === 'Diamond') && (shape.originLines[i].origineHandle === HANDLE.LEFT)) ||
@@ -1747,10 +1762,10 @@ CanvasState.prototype.runFromShape = async function (shape) {
                     (shape.className !== 'Diamond')) {
                     await this.runFromShape(shape.originLines[i].destination);
                 }
-            }
+            } else logger.debug.log('NOT IN SHAPE')
         }
     } else {
-        console.log('already passed '+MAX_SAME_EXECUTION_COUNT+' times in :', shape)
+        logger.debug.log('already passed '+MAX_SAME_EXECUTION_COUNT+' times with same context (infinite loop presumption) in :', shape)
     }
 }
 
@@ -1778,7 +1793,7 @@ CanvasState.prototype.exportJson = function () {
         lines:lines
     }
 
-   //console.log(JSON.stringify(canvas));
+   //logger.debug.log(JSON.stringify(canvas));
     return canvas;
 }
 
@@ -1891,11 +1906,11 @@ CanvasState.prototype.updMenu = function () {
 
 
 CanvasState.prototype.deleteShape = function(shape) {
-    console.log(shape)
+    logger.debug.log(shape)
 
     if ((shape !== null) && (shape.className !== 'Circle')) {
         let index = this.shapes.indexOf(shape);
-        console.log(index)
+        logger.debug.log(index)
         if (index !== -1) {
             this.shapes[index].destroy();
             this.shapes.splice(index, 1);
@@ -1908,7 +1923,7 @@ CanvasState.prototype.load = function () {
 }
 
 $('#jsonModal').on('show.bs.modal', function (event) {
-    console.log(event.relatedTarget);
+    logger.debug.log(event.relatedTarget);
 });
 
 
@@ -1925,7 +1940,7 @@ function handleSaveButton(event) {
 
 
 CanvasState.prototype.save = function () {
-    console.log(document.querySelector('#save-json'))
+    logger.debug.log(document.querySelector('#save-json'))
     document.querySelector('#save-json').removeEventListener('click', handleSaveButton)
     document.querySelector('#save-json').addEventListener('click', handleSaveButton);
     $('#json-text').val( JSON.stringify(this.exportJson(), 'null','  '));
@@ -1933,7 +1948,7 @@ CanvasState.prototype.save = function () {
 }
 
 CanvasState.prototype.exec = async function () {
-    console.log(this.parameters);
+    logger.debug.log(this.parameters);
 }
 
 
@@ -2218,17 +2233,17 @@ function loadGraph(save) {
 
 
     for (let i=0; i<save.shapes.length; i++) {
-//        console.log(save.shapes[i])
+//        logger.debug.log(save.shapes[i])
         initShapes[save.shapes[i].name]=new window[save.shapes[i].type](s, save.shapes[i].x, save.shapes[i].y, save.shapes[i].w, save.shapes[i].h, save.shapes[i].label, save.shapes[i].fill);
         initShapes[save.shapes[i].name].name = save.shapes[i].name
         initShapes[save.shapes[i].name].description = save.shapes[i].description
         initShapes[save.shapes[i].name].execFunction = save.shapes[i].function
         initShapes[save.shapes[i].name].trueOnLeft = save.shapes[i].trueOnLeft
-//        console.log(save.shapes[i].parameters)
+//        logger.debug.log(save.shapes[i].parameters)
         initShapes[save.shapes[i].name].parameters = save.shapes[i].parameters
         s.addShape(initShapes[save.shapes[i].name])
     }
-//    console.log(initShapes)
+//    logger.debug.log(initShapes)
 
     for (let i=0; i<save.lines.length; i++) {
         s.addLine(new Line(initShapes[save.lines[i].origin], save.lines[i].handle, initShapes[save.lines[i].destination]));
@@ -2270,3 +2285,5 @@ $(function () {
         }
     );
 });
+
+

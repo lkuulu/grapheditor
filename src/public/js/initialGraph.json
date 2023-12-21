@@ -26,15 +26,151 @@
       "description": ""
     },
     {
-      "name": "46b2d9b2-e798-4538-843b-91b02eae3635",
-      "type": "Diamond",
-      "x": 240,
-      "y": 170,
+      "name": "bb8d8252-f082-4a5b-98ec-2b462f13f270",
+      "type": "Box",
+      "x": 570,
+      "y": 160,
       "w": 160,
       "h": 90,
-      "label": "on bloucle ?\nOui ou non ",
+      "label": "Answer: Yes \n then do ...",
       "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"type\":\"confirm\",\n  \"question\": \"on boucle oui ou non (2) ?\",\"buttons\":{\"primary\":{\"label\":\"Oui\",\"value\":true},\"secondary\":{\"label\":\"Non\", \"value\":false}},\n  \"script\": \"console.log('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "parameters": "http://test.com/api",
+      "description": "",
+      "function": "apiPOST"
+    },
+    {
+      "name": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
+      "type": "Box",
+      "x": 80,
+      "y": 160,
+      "w": 160,
+      "h": 90,
+      "label": "Answer is No \n so do ...",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"logger.debug.info(res);logger.debug.info(res.headers);logger.debug.info(res.responseCode);return {context:context, return:res}\"\n}",
+      "description": "",
+      "function": "httpCode"
+    },
+    {
+      "name": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
+      "type": "Diamond",
+      "x": 50,
+      "y": 300,
+      "w": 220,
+      "h": 90,
+      "label": "Another test\nwith a newline\nand another one",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"sendTo\":\"lkuulu@pharabod.com\"}",
+      "description": "",
+      "function": "sendMail",
+      "trueOnLeft": true
+    },
+    {
+      "name": "70fc814d-4151-43ec-9688-df8f72d3176a",
+      "type": "Diamond",
+      "x": 340,
+      "y": 90,
+      "w": 160,
+      "h": 90,
+      "label": "1st question\n so what ?",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"logger.debug.info(res);logger.debug.info(res.headers);logger.debug.info(res.responseCode);logger.debug.info(data['@id']);return {context:context, return:true}\"\n}",
+      "description": "",
+      "function": "apiGET",
+      "trueOnLeft": true
+    },
+    {
+      "name": "76397a1f-95c3-447a-b20a-3593e3a8ff14",
+      "type": "Doc",
+      "x": 740,
+      "y": 740,
+      "w": 160,
+      "h": 70,
+      "label": "NON",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"sendTo\":\"lkuulu@pharabod.com\"}",
+      "description": "",
+      "function": "sendMail"
+    },
+    {
+      "name": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
+      "type": "Diamond",
+      "x": 50,
+      "y": 430,
+      "w": 220,
+      "h": 90,
+      "label": "Question utilisateur",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on continue\", \"default\":\"true\",\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "description": "",
+      "function": "askAQuestion",
+      "trueOnLeft": false
+    },
+    {
+      "name": "51140b77-0178-4ba6-b2d4-3289858538c5",
+      "type": "Diamond",
+      "x": 460,
+      "y": 500,
+      "w": 160,
+      "h": 90,
+      "label": "Always return false",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"parameters\":\"\",\"script\":\"logger.debug.info(context); return {context:context, return:false}\"}",
+      "description": "",
+      "function": "script",
+      "trueOnLeft": true
+    },
+    {
+      "name": "ebd5bc72-4f12-4e53-8646-7f4a5ec0dca8",
+      "type": "Doc",
+      "x": 270,
+      "y": 810,
+      "w": 160,
+      "h": 90,
+      "label": "OUI",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "",
+      "description": "",
+      "function": ""
+    },
+    {
+      "name": "f1dd8c93-ad5f-42e4-9395-a37ae419c5c1",
+      "type": "Diamond",
+      "x": 630,
+      "y": 580,
+      "w": 160,
+      "h": 90,
+      "label": "Ca va bien ?",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"type\":\"confirm\",\n  \"question\": \"Ca va bien du bas ?\",\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "description": "",
+      "function": "askAQuestion",
+      "trueOnLeft": true
+    },
+    {
+      "name": "019324a0-f8ca-4daf-9d7c-641e7eaa3e00",
+      "type": "Diamond",
+      "x": 80,
+      "y": 640,
+      "w": 160,
+      "h": 90,
+      "label": "Tjs cette question",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on toujours cette question, ok ? \", \"default\":\"false\",\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "description": "",
+      "function": "askAQuestion",
+      "trueOnLeft": true
+    },
+    {
+      "name": "46b2d9b2-e798-4538-843b-91b02eae3635",
+      "type": "Diamond",
+      "x": 340,
+      "y": 210,
+      "w": 160,
+      "h": 90,
+      "label": "test bootstrap",
+      "fill": "rgba(224, 236, 255, 0.8)",
+      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on toujours cette question, ok ? \", \"default\":\"false\",\"buttons\":{\"primary\":{\"label\":\"OK\", \"value\":true},\"secondary\":{\"label\":\"KO\", \"value\":false}},\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
       "description": "",
       "function": "bootstrapAskAQuestion",
       "trueOnLeft": true
@@ -42,13 +178,13 @@
     {
       "name": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
       "type": "Diamond",
-      "x": 420,
-      "y": 340,
+      "x": 390,
+      "y": 370,
       "w": 160,
       "h": 90,
-      "label": "Repose tjs question",
+      "label": "test bootstrap yesNo",
       "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on repose toujours cette question, ok ? \", \"default\":\"true\",\"buttons\":{\"primary\":{\"label\":\"Valider\", \"value\":true},\"secondary\":{\"label\":\"Annuler\", \"value\":false}},\n  \"script\": \"console.log('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "parameters": "{\"type\":\"confirm\",\n  \"question\": \"oui ou non (2)?\",\"buttons\":{\"primary\":{\"label\":\"Oui\",\"value\":true},\"secondary\":{\"label\":\"Non\", \"value\":false}},\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
       "description": "",
       "function": "bootstrapAskAQuestion",
       "trueOnLeft": true
@@ -56,23 +192,93 @@
   ],
   "lines": [
     {
+      "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
+      "handle": 4,
+      "destination": "bb8d8252-f082-4a5b-98ec-2b462f13f270"
+    },
+    {
       "origin": "ce3be8aa-7fa3-4ec8-9a76-3578aac82649",
+      "handle": 6,
+      "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
+    },
+    {
+      "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
+      "handle": 3,
+      "destination": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d"
+    },
+    {
+      "origin": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
+      "handle": 6,
+      "destination": "cf3ff639-2944-430f-8ea1-22ab04eadf6c"
+    },
+    {
+      "origin": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
+      "handle": 3,
+      "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
+    },
+    {
+      "origin": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
+      "handle": 6,
+      "destination": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e"
+    },
+    {
+      "origin": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
+      "handle": 4,
+      "destination": "51140b77-0178-4ba6-b2d4-3289858538c5"
+    },
+    {
+      "origin": "51140b77-0178-4ba6-b2d4-3289858538c5",
+      "handle": 3,
+      "destination": "ebd5bc72-4f12-4e53-8646-7f4a5ec0dca8"
+    },
+    {
+      "origin": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
+      "handle": 3,
+      "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
+    },
+    {
+      "origin": "51140b77-0178-4ba6-b2d4-3289858538c5",
+      "handle": 4,
+      "destination": "f1dd8c93-ad5f-42e4-9395-a37ae419c5c1"
+    },
+    {
+      "origin": "f1dd8c93-ad5f-42e4-9395-a37ae419c5c1",
+      "handle": 3,
+      "destination": "ebd5bc72-4f12-4e53-8646-7f4a5ec0dca8"
+    },
+    {
+      "origin": "f1dd8c93-ad5f-42e4-9395-a37ae419c5c1",
+      "handle": 4,
+      "destination": "76397a1f-95c3-447a-b20a-3593e3a8ff14"
+    },
+    {
+      "origin": "019324a0-f8ca-4daf-9d7c-641e7eaa3e00",
+      "handle": 4,
+      "destination": "ebd5bc72-4f12-4e53-8646-7f4a5ec0dca8"
+    },
+    {
+      "origin": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
+      "handle": 6,
+      "destination": "019324a0-f8ca-4daf-9d7c-641e7eaa3e00"
+    },
+    {
+      "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
       "handle": 6,
       "destination": "46b2d9b2-e798-4538-843b-91b02eae3635"
     },
     {
-      "origin": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
-      "handle": 3,
+      "origin": "46b2d9b2-e798-4538-843b-91b02eae3635",
+      "handle": 6,
       "destination": "0a84e856-5cf1-4d5c-a07e-da4e782a3321"
     },
     {
-      "origin": "46b2d9b2-e798-4538-843b-91b02eae3635",
-      "handle": 3,
-      "destination": "46b2d9b2-e798-4538-843b-91b02eae3635"
+      "origin": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
+      "handle": 4,
+      "destination": "f1dd8c93-ad5f-42e4-9395-a37ae419c5c1"
     },
     {
-      "origin": "46b2d9b2-e798-4538-843b-91b02eae3635",
-      "handle": 4,
+      "origin": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
+      "handle": 3,
       "destination": "0a84e856-5cf1-4d5c-a07e-da4e782a3321"
     }
   ]
