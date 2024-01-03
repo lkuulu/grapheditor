@@ -52,27 +52,13 @@
       "function": "httpCode"
     },
     {
-      "name": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
-      "type": "Diamond",
-      "x": 50,
-      "y": 300,
-      "w": 220,
-      "h": 90,
-      "label": "Another test\nwith a newline\nand another one",
-      "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"sendTo\":\"lkuulu@pharabod.com\"}",
-      "description": "",
-      "function": "sendMail",
-      "trueOnLeft": true
-    },
-    {
       "name": "70fc814d-4151-43ec-9688-df8f72d3176a",
       "type": "Diamond",
       "x": 340,
       "y": 90,
       "w": 160,
       "h": 90,
-      "label": "1st question\n so what ?",
+      "label": "Appel API",
       "fill": "rgba(224, 236, 255, 0.8)",
       "parameters": "{\n  \"url\": \"https://apis.rfi.fr/products/get_product/rfi_getpodcast_by_nid?token_application=radiofrance&program.entrepriseId=WBMZ320541-RFI-FR-20230908&format=jsonld&limit=1&force_single_result=1\",\n  \"script\": \"logger.debug.info(res);logger.debug.info(res.headers);logger.debug.info(res.responseCode);logger.debug.info(data['@id']);return {context:context, return:true}\"\n}",
       "description": "",
@@ -99,18 +85,18 @@
       "y": 430,
       "w": 220,
       "h": 90,
-      "label": "Question utilisateur",
+      "label": "Retourne en haut",
       "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on continue\", \"default\":\"true\",\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on retourne en haut\", \"default\":\"true\",\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
       "description": "",
       "function": "askAQuestion",
-      "trueOnLeft": false
+      "trueOnLeft": true
     },
     {
       "name": "51140b77-0178-4ba6-b2d4-3289858538c5",
       "type": "Diamond",
-      "x": 460,
-      "y": 500,
+      "x": 450,
+      "y": 510,
       "w": 160,
       "h": 90,
       "label": "Always return false",
@@ -165,29 +151,29 @@
       "name": "46b2d9b2-e798-4538-843b-91b02eae3635",
       "type": "Diamond",
       "x": 340,
-      "y": 210,
+      "y": 250,
       "w": 160,
       "h": 90,
-      "label": "test bootstrap",
+      "label": "Direct en bas",
       "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on toujours cette question, ok ? \", \"default\":\"false\",\"buttons\":{\"primary\":{\"label\":\"OK\", \"value\":true},\"secondary\":{\"label\":\"KO\", \"value\":false}},\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"direct en bas ? \", \"default\":\"false\",\"buttons\":{\"primary\":{\"label\":\"OK\", \"value\":true},\"secondary\":{\"label\":\"KO\", \"value\":false}},\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
       "description": "",
       "function": "bootstrapAskAQuestion",
-      "trueOnLeft": true
+      "trueOnLeft": false
     },
     {
       "name": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
       "type": "Diamond",
-      "x": 390,
-      "y": 370,
+      "x": 570,
+      "y": 330,
       "w": 160,
       "h": 90,
-      "label": "test bootstrap yesNo",
+      "label": "certain",
       "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"type\":\"confirm\",\n  \"question\": \"oui ou non (2)?\",\"buttons\":{\"primary\":{\"label\":\"Oui\",\"value\":true},\"secondary\":{\"label\":\"Non\", \"value\":false}},\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "parameters": "{\"type\":\"confirm\",\n  \"question\": \"certain ?\",\"buttons\":{\"primary\":{\"label\":\"Oui\",\"value\":true},\"secondary\":{\"label\":\"Non\", \"value\":false}},\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
       "description": "",
       "function": "bootstrapAskAQuestion",
-      "trueOnLeft": true
+      "trueOnLeft": false
     }
   ],
   "lines": [
@@ -205,21 +191,6 @@
       "origin": "70fc814d-4151-43ec-9688-df8f72d3176a",
       "handle": 3,
       "destination": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d"
-    },
-    {
-      "origin": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
-      "handle": 6,
-      "destination": "cf3ff639-2944-430f-8ea1-22ab04eadf6c"
-    },
-    {
-      "origin": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
-      "handle": 3,
-      "destination": "70fc814d-4151-43ec-9688-df8f72d3176a"
-    },
-    {
-      "origin": "cf3ff639-2944-430f-8ea1-22ab04eadf6c",
-      "handle": 6,
-      "destination": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e"
     },
     {
       "origin": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e",
@@ -267,18 +238,18 @@
       "destination": "46b2d9b2-e798-4538-843b-91b02eae3635"
     },
     {
-      "origin": "46b2d9b2-e798-4538-843b-91b02eae3635",
-      "handle": 6,
-      "destination": "0a84e856-5cf1-4d5c-a07e-da4e782a3321"
-    },
-    {
       "origin": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
       "handle": 4,
       "destination": "f1dd8c93-ad5f-42e4-9395-a37ae419c5c1"
     },
     {
-      "origin": "0a84e856-5cf1-4d5c-a07e-da4e782a3321",
-      "handle": 3,
+      "origin": "aca42fd2-163f-4461-9fa2-ba3ad93fbe4d",
+      "handle": 6,
+      "destination": "5c46c2a4-ebb0-4301-bfc4-dfe3e474a76e"
+    },
+    {
+      "origin": "46b2d9b2-e798-4538-843b-91b02eae3635",
+      "handle": 4,
       "destination": "0a84e856-5cf1-4d5c-a07e-da4e782a3321"
     }
   ]

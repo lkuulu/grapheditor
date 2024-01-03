@@ -48,7 +48,7 @@
       "h": 90,
       "label": "Repose tjs question",
       "fill": "rgba(224, 236, 255, 0.8)",
-      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on repose toujours cette question, ok ? \", \"default\":\"true\",\"buttons\":{\"primary\":{\"label\":\"Valider\", \"value\":true},\"secondary\":{\"label\":\"Annuler\", \"value\":false}},\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
+      "parameters": "{\"type\":\"prompt\",\n  \"question\": \"on repose toujours cette question, ok ? \", \"default\":\"false\",\"buttons\":{\"primary\":{\"label\":\"Valider\", \"value\":true},\"secondary\":{\"label\":\"Annuler\", \"value\":false}},\n  \"script\": \"logger.debug.info('la réponse est ',answer);return {context:context, return:answer}\"\n}",
       "description": "",
       "function": "bootstrapAskAQuestion",
       "trueOnLeft": true

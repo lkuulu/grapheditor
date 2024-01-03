@@ -58,7 +58,7 @@ const LOG_LEVELS = {
     NO_LOGS : 0
 }
 
-const global_logLevel = LOG_LEVELS.PROD;
+const global_logLevel = LOG_LEVELS.WARN;
 
 class Logger {
     constructor(logLevel) {

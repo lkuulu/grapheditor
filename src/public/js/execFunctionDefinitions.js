@@ -72,7 +72,7 @@ class sendMail extends ExecFunctionDefs {
 
 
 class bootstrapAskAQuestion extends ExecFunctionDefs {
-    static definition = 'Question utilisateur jolie';
+    static definition = 'Bootstrap Question';
     static jsonSchema = {}
 
     constructor() {

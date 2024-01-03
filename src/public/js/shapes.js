@@ -63,6 +63,7 @@ let direction = {
     'toBottom': 4
 };
 
+
 /* global values */
 
 let propertiesTypes = {
@@ -81,38 +82,40 @@ let propertiesTypes = {
     'autosize': 'boolean',
     'onlydeletechildren': 'boolean',
     'jsonFile': 'text'
-
 };
 
 let menu = [{
-    name: 'create',
+    name: 'New',
     img: 'images/create.png',
-    title: 'Create shape',
+    title: 'New shape',
     subMenu: [{
         'name': 'Question',
+        img: 'images/losange.png',
         fun: function () {
             s.addShape(new Diamond(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90, '', globalColor));
         }
     }, {
         'name': 'Action',
+        img: 'images/rectangle.png',
         fun: function () {
             s.addShape(new Box(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90, '', globalColor));
         }
     }, {
         'name': 'Document',
+        img: 'images/doc.png',
         fun: function () {
             s.addShape(new Doc(s, s.lastCtxMenuPoint.x - 10, s.lastCtxMenuPoint.y - 10, 160, 90, '', globalColor));
         }
     }]
 }, {
-    name: 'delete',
+    name: 'Delete',
     img: 'images/delete.png',
     title: 'Delete shape',
     fun: function () {
         s.deleteSelection();
     }
 }, {
-    name: 'download',
+    name: 'Download',
     img: 'images/saveimage.png',
     title: 'Download as image',
     fun: function () {
@@ -125,21 +128,14 @@ let menu = [{
     fun: function () {
         s.save();
     }
-}
-, {
-    name: 'execute',
-    img: 'images/saveimage.png',
-    title: 'Execute function as a test',
-    fun: function () {
-        s.run();
-/*
-        for (let i=0; i<s.selections.length; i++) {
-            s.selections[i].exec()
+}, {
+        name: 'Execute',
+        img: 'images/run.png',
+        title: 'Execute function as a test',
+        fun: function () {
+            s.run();
         }
- */
     }
-}
-
 ];
 
 
@@ -236,6 +232,7 @@ Line.prototype.setDestCoord = function () {
 };
 
 Line.prototype.draw = function (ctx) {
+
     ctx.lineWidth = 2;
     if (this.showBtn) {
         ctx.strokeStyle = RED_COLOR; //'#aa0000';
@@ -1291,36 +1288,7 @@ SimpleFrame.prototype.draw = function (ctx) {
 
 function CanvasState(canvas) {
     // **** First some setup! ****
-
-    this.canvas = canvas;
-    this.w = canvas.width;
-    this.h = canvas.height;
-
-    this.label = '';
-    this.description = '';
-    this.parameters = '';
-    this.gridsize = 10;
-    this.autosize = false;
-    this.onlydeletechildren = true;
-
-    this.ctx = canvas.getContext('2d');
-    // This complicates things a little but but fixes mouse co-ordinate problems
-    // when there's a border or padding. See getMouse for more detail
-    this.stylePaddingLeft = 0;
-    this.stylePaddingTop = 0;
-    this.styleBorderLeft = 0;
-    this.styleBorderTop = 0;
-    if (document.defaultView && document.defaultView.getComputedStyle) {
-        this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10) || 0;
-        this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10) || 0;
-        this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10) || 0;
-        this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10) || 0;
-    }
-    // Some pages have fixed-position bars (like the stumbleupon bar) at the top or left of the page
-    // They will mess up mouse coordinates and this fixes that
-    let html = document.body.parentNode;
-    this.htmlTop = html.offsetTop;
-    this.htmlLeft = html.offsetLeft;
+    this.designTime = (canvas !== false);
 
     // **** Keep track of state! ****
 
@@ -1329,386 +1297,420 @@ function CanvasState(canvas) {
     this.lines = [];
     this.selections = [];
 
-    this.selectFrame = null;
-
-    this.grid = new Grid(this.gridsize);
-    this.grid.color = 'rgba(0,0,0,.1)';
-    //this.grid.active=false;
-
-    this.dragging = false; // Keep track of when we are dragging
-
-    this.isResizeDrag = false;
-    this.isLinkDrag = false;
-    this.expectResize = -1;
-    this.expectLink = -1;
-
-    this.isSelectDrag = false;
-
-    this.expectDelLine = -1;
-    this.isDel = false;
-
-    this.lastCtxMenuPoint = null;
-
     this.runtime = new Runtime();
 
-    function linkToHandleIndex(linkIndex) {
-        // convert Link index to handle Index
-        // 0  1  2
-        // 3     4
-        // 5  6  7
-        if (linkIndex === 0) return HANDLE.LEFT;
-        if (linkIndex === 1) return HANDLE.BOTTOM;
-        if (linkIndex === 2) return HANDLE.RIGHT;
-        return linkIndex;
-    }
 
-    // **** Then events! ****
+    if (this.designTime) {
+        this.canvas = canvas;
+        this.w = canvas.width;
+        this.h = canvas.height;
+        this.ctx = canvas.getContext('2d');
 
-    // This is an example of a closure!
-    // Right here "this" means the CanvasState. But we are making events on the Canvas itself,
-    // and when the events are fired on the canvas the variable "this" is going to mean the canvas!
-    // Since we still want to use this particular CanvasState in the events we have to save a reference to it.
-    // This is our reference!
-    let myState = this;
+        this.label = '';
+        this.description = '';
+        this.parameters = '';
+        this.gridsize = 10;
+        this.autosize = false;
+        this.onlydeletechildren = true;
 
-    //fixes a problem where double clicking causes text to get selected on the canvas
-    canvas.addEventListener('selectstart', function (e) {
-        e.preventDefault();
-        return false;
-    }, false);
-    // Up, down, and move are for dragging
-    canvas.addEventListener('mousedown', function (e) {
-        let mouse = myState.getMouse(e);
-        let mx = mouse.x;
-        let my = mouse.y;
-        let shapes = myState.shapes;
-        let l = shapes.length;
+        // This complicates things a little but but fixes mouse co-ordinate problems
+        // when there's a border or padding. See getMouse for more detail
+        this.stylePaddingLeft = 0;
+        this.stylePaddingTop = 0;
+        this.styleBorderLeft = 0;
+        this.styleBorderTop = 0;
+        if (document.defaultView && document.defaultView.getComputedStyle) {
+            this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10) || 0;
+            this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10) || 0;
+            this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10) || 0;
+            this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10) || 0;
+        }
+        // Some pages have fixed-position bars (like the stumbleupon bar) at the top or left of the page
+        // They will mess up mouse coordinates and this fixes that
+        let html = document.body.parentNode;
+        this.htmlTop = html.offsetTop;
+        this.htmlLeft = html.offsetLeft;
 
-        myState.lastCtxMenuPoint = new Point(mouse.x, mouse.y);
+        this.selectFrame = null;
 
-        if (myState.isSelectDrag) {
-            myState.selections.length = 0;
-            myState.isSelectDrag = false;
+        this.grid = new Grid(this.gridsize);
+        this.grid.color = 'rgba(0,0,0,.1)';
+        //this.grid.active=false;
+
+        this.dragging = false; // Keep track of when we are dragging
+
+        this.isResizeDrag = false;
+        this.isLinkDrag = false;
+        this.expectResize = -1;
+        this.expectLink = -1;
+
+        this.isSelectDrag = false;
+
+        this.expectDelLine = -1;
+        this.isDel = false;
+
+        this.lastCtxMenuPoint = null;
+
+
+        function linkToHandleIndex(linkIndex) {
+            // convert Link index to handle Index
+            // 0  1  2
+            // 3     4
+            // 5  6  7
+            if (linkIndex === 0) return HANDLE.LEFT;
+            if (linkIndex === 1) return HANDLE.BOTTOM;
+            if (linkIndex === 2) return HANDLE.RIGHT;
+            return linkIndex;
         }
 
-        // we are over a selection box
-        // resize detected
-        if (myState.expectResize !== -1) {
-            myState.isResizeDrag = true;
-            // stop here, do not check other things
-            return;
-        }
+        // **** Then events! ****
 
-        // link making
-        if (myState.expectLink !== -1) {
-            myState.isLinkDrag = true;
-            // stop here, do not check other things
-            return;
-        }
+        // This is an example of a closure!
+        // Right here "this" means the CanvasState. But we are making events on the Canvas itself,
+        // and when the events are fired on the canvas the variable "this" is going to mean the canvas!
+        // Since we still want to use this particular CanvasState in the events we have to save a reference to it.
+        // This is our reference!
+        let myState = this;
 
-        // delete line button click
-        if (myState.expectDelLine !== -1) {
-            myState.isDel = true;
-            // stop here, do not check other things
-            return;
-        }
+        //fixes a problem where double clicking causes text to get selected on the canvas
+        canvas.addEventListener('selectstart', function (e) {
+            e.preventDefault();
+            return false;
+        }, false);
+        // Up, down, and move are for dragging
+        canvas.addEventListener('mousedown', function (e) {
+            let mouse = myState.getMouse(e);
+            let mx = mouse.x;
+            let my = mouse.y;
+            let shapes = myState.shapes;
+            let l = shapes.length;
 
+            myState.lastCtxMenuPoint = new Point(mouse.x, mouse.y);
 
-        myState.dragging = false;
-        let mySel = null;
-
-        // store in each selected shape offset from mouse coordinates
-        for (let i = myState.selections.length - 1; i >= 0; i--) {
-            mySel = myState.selections[i];
-            // Keep track of where in the object we clicked
-            // so we can move it smoothly (see mousemove)
-            myState.dragging = myState.dragging || (mySel.contains(mx, my));
-
-            mySel.dragoffx = mx - mySel.x;
-            mySel.dragoffy = my - mySel.y;
-
-        }
-
-
-        if (myState.dragging) {
-            myState.valid = false;
-        } else {
-            if (!e.ctrlKey) {
-                // invalid btns
-                for (let i = myState.selections.length - 1; i >= 0; i--) {
-                    myState.selections[i].hideBtns();
-                    myState.valid = false; // Need to clear the old selection border
-                }
+            if (myState.isSelectDrag) {
                 myState.selections.length = 0;
+                myState.isSelectDrag = false;
             }
-        }
+
+            // we are over a selection box
+            // resize detected
+            if (myState.expectResize !== -1) {
+                myState.isResizeDrag = true;
+                // stop here, do not check other things
+                return;
+            }
+
+            // link making
+            if (myState.expectLink !== -1) {
+                myState.isLinkDrag = true;
+                // stop here, do not check other things
+                return;
+            }
+
+            // delete line button click
+            if (myState.expectDelLine !== -1) {
+                myState.isDel = true;
+                // stop here, do not check other things
+                return;
+            }
 
 
-        // if no shape selected
-        // check if mouse click is on a shape
-        if ((myState.selections.length === 0) || (e.ctrlKey)) {
-            for (let i = l - 1; i >= 0; i--) {
-                if (shapes[i].contains(mx, my)) {
-                    mySel = shapes[i];
-                    // Keep track of where in the object we clicked
-                    // so we can move it smoothly (see mousemove)
-                    mySel.dragoffx = mx - mySel.x;
-                    mySel.dragoffy = my - mySel.y;
-                    myState.dragging = true;
+            myState.dragging = false;
+            let mySel = null;
 
-                    //toggle Shape Selection
-                    let pos = myState.selections.indexOf(mySel);
-                    if (pos !== -1) {
-                        // delete from selection = hidebtn
-                        mySel.hideBtns();
-                        myState.selections.splice(pos, 1);
-                        //myState.selection=null;
-                    } else {
-                        // add this shape to selectionArray
-                        myState.selections.push(mySel);
-                        //myState.setSelection(mySel);
+            // store in each selected shape offset from mouse coordinates
+            for (let i = myState.selections.length - 1; i >= 0; i--) {
+                mySel = myState.selections[i];
+                // Keep track of where in the object we clicked
+                // so we can move it smoothly (see mousemove)
+                myState.dragging = myState.dragging || (mySel.contains(mx, my));
+
+                mySel.dragoffx = mx - mySel.x;
+                mySel.dragoffy = my - mySel.y;
+
+            }
+
+
+            if (myState.dragging) {
+                myState.valid = false;
+            } else {
+                if (!e.ctrlKey) {
+                    // invalid btns
+                    for (let i = myState.selections.length - 1; i >= 0; i--) {
+                        myState.selections[i].hideBtns();
+                        myState.valid = false; // Need to clear the old selection border
                     }
-
-                    //if (myState.selections.length>0)
-                    // myState.selections[0].hideBtns();
-
-                    myState.valid = false;
-                    break;
+                    myState.selections.length = 0;
                 }
             }
-        }
-
-        // stop select frame drawing
-        myState.selectFrame = null;
-
-        // haven't returned means we have failed to select anything.
-        // If there was an object selected, we deselect it
-        for (let i = myState.selections.length - 1; i >= 0; i--) {
-            myState.selections[i].hideBtns();
-            myState.valid = false; // Need to clear the old selection border
-        }
-
-        if (myState.selections.length > 0) return;
-
-        // entered in multiselect mode, set isSelect true
-        myState.selectFrame = new SimpleFrame(new Point(mx, my));
-        myState.isSelectDrag = true;
 
 
-    }, true);
+            // if no shape selected
+            // check if mouse click is on a shape
+            if ((myState.selections.length === 0) || (e.ctrlKey)) {
+                for (let i = l - 1; i >= 0; i--) {
+                    if (shapes[i].contains(mx, my)) {
+                        mySel = shapes[i];
+                        // Keep track of where in the object we clicked
+                        // so we can move it smoothly (see mousemove)
+                        mySel.dragoffx = mx - mySel.x;
+                        mySel.dragoffy = my - mySel.y;
+                        myState.dragging = true;
 
-    canvas.addEventListener('mousemove', function (e) {
-        let mouse = myState.getMouse(e);
-        let mx = mouse.x;
-        let my = mouse.y;
+                        //toggle Shape Selection
+                        let pos = myState.selections.indexOf(mySel);
+                        if (pos !== -1) {
+                            // delete from selection = hidebtn
+                            mySel.hideBtns();
+                            myState.selections.splice(pos, 1);
+                            //myState.selection=null;
+                        } else {
+                            // add this shape to selectionArray
+                            myState.selections.push(mySel);
+                            //myState.setSelection(mySel);
+                        }
 
-        //logger.debug.log('dragging', myState.dragging, 'isSelectDrag(', myState.isSelectDrag ,',',myState.expectResize,') isResizeDrag', myState.isResizeDrag ,'isLinkDrag', myState.isLinkDrag );
-        if (myState.dragging) {
-            // We don't want to drag the object by its top-left corner, we want to drag it
-            // from where we clicked. That's why we saved the offset and use it here
-            for (let i = 0; i < myState.selections.length; i++) {
-                // calc offset for each selection
-                // snap to nearest x, y
-                myState.selections[i].x = myState.grid.nearest((mx - myState.selections[i].dragoffx));
-                myState.selections[i].y = myState.grid.nearest((my - myState.selections[i].dragoffy));
-            }
+                        //if (myState.selections.length>0)
+                        // myState.selections[0].hideBtns();
 
-            myState.valid = false; // Something's dragging so we must redraw
-
-        } else if ((myState.isSelectDrag) && (myState.selectFrame != null)) {
-            // trace selection border
-            myState.selectFrame.setDestinationCoord(new Point(mx, my));
-            myState.updateSelections();
-            myState.valid = false;
-
-        } else if (myState.isResizeDrag) {
-            myState.selections[0].resize(myState.expectResize, myState.grid.nearest(mx), myState.grid.nearest(my));
-            myState.valid = false;
-        } else if (myState.isLinkDrag) {
-
-            //check if mouse over different shape of selection
-            for (let i = myState.shapes.length - 1; i >= 0; i--) {
-                if (myState.shapes[i].contains(mx, my)) {
-                    let upShape = myState.shapes[i];
-                    if (upShape !== myState.selection) {
-                        myState.canvas.style.cursor = 'copy';
+                        myState.valid = false;
+                        break;
                     }
                 }
             }
-            myState.valid = false;
-        } else
-            // Implements cursor when over handles
-        if (myState.selections.length !== 0 && !myState.isResizeDrag && typeof (myState.selections[myState.selections.length - 1]) != 'undefined') {
-            if (typeof myState.selections[myState.selections.length - 1].drawHandles != "undefined") {
-                myState.expectResize = myState.selections[myState.selections.length - 1].setCursor(myState, mx, my);
-                // in selection, exit
-                if (myState.expectResize !== -1) return;
 
-                // not over a selection box, return to normal
-                myState.isResizeDrag = false;
-                myState.expectResize = -1;
-                this.style.cursor = 'auto';
+            // stop select frame drawing
+            myState.selectFrame = null;
 
-            }
-            if (typeof myState.selections[myState.selections.length - 1].drawLinks != "undefined") {
-                myState.expectLink = linkToHandleIndex(myState.selections[myState.selections.length - 1].setLinkCursor(myState, mx, my));
-                // in selection, exit
-                if (myState.expectLink !== -1) myState.canvas.title = 'Create link:\nDrag to shape you want to link';
-                if (myState.expectLink !== -1) return;
-
-                // not over a selection box, return to normal
-                myState.canvas.title = '';
-                myState.isLinkDrag = false;
-                myState.expectLink = -1;
-                this.style.cursor = 'auto';
+            // haven't returned means we have failed to select anything.
+            // If there was an object selected, we deselect it
+            for (let i = myState.selections.length - 1; i >= 0; i--) {
+                myState.selections[i].hideBtns();
+                myState.valid = false; // Need to clear the old selection border
             }
 
-            myState.isDel = false;
-            myState.expectDelLine = -1;
+            if (myState.selections.length > 0) return;
 
-            // cursor on link delete
-            for (let i = myState.lines.length - 1; i >= 0; i--) {
-                if (myState.lines[i].setCursor(myState, mx, my)) {
-                    myState.expectDelLine = i;
+            // entered in multiselect mode, set isSelect true
+            myState.selectFrame = new SimpleFrame(new Point(mx, my));
+            myState.isSelectDrag = true;
+
+
+        }, true);
+
+        canvas.addEventListener('mousemove', function (e) {
+            let mouse = myState.getMouse(e);
+            let mx = mouse.x;
+            let my = mouse.y;
+
+            //logger.debug.log('dragging', myState.dragging, 'isSelectDrag(', myState.isSelectDrag ,',',myState.expectResize,') isResizeDrag', myState.isResizeDrag ,'isLinkDrag', myState.isLinkDrag );
+            if (myState.dragging) {
+                // We don't want to drag the object by its top-left corner, we want to drag it
+                // from where we clicked. That's why we saved the offset and use it here
+                for (let i = 0; i < myState.selections.length; i++) {
+                    // calc offset for each selection
+                    // snap to nearest x, y
+                    myState.selections[i].x = myState.grid.nearest((mx - myState.selections[i].dragoffx));
+                    myState.selections[i].y = myState.grid.nearest((my - myState.selections[i].dragoffy));
                 }
-                // in selection, exit
-                if (myState.expectDelLine !== -1) return;
-            }
-            // not over a selection box, return to normal
-            myState.isDel = false;
-            myState.expectDelLine = -1;
-            this.style.cursor = 'auto';
-        }
 
-        // end of implementing move over handles
-    }, true);
+                myState.valid = false; // Something's dragging so we must redraw
 
+            } else if ((myState.isSelectDrag) && (myState.selectFrame != null)) {
+                // trace selection border
+                myState.selectFrame.setDestinationCoord(new Point(mx, my));
+                myState.updateSelections();
+                myState.valid = false;
 
-    window.addEventListener('keydown', function (e) {
-        //logger.debug.log(e.keyCode);
-        switch (e.keyCode) {
-            case 46:
-                if (e.shiftKey) {
-                    s.deleteSelection()
-                }
-                break;
-            case 65: // a
-                if (!($('#jsonModal').hasClass('show'))) {
-                    if (e.ctrlKey) {
-                        s.selectAll();
-                        e.preventDefault();
-                    }
-                }
-                break;
-            case 37: // <-
-                s.moveSelection(direction.toLeft, (e.shiftKey) ? onePage : oneStep);
-                break;
-            case 38: // ^
-                s.moveSelection(direction.toTop, (e.shiftKey) ? onePage : oneStep);
-                break;
-            case 39: // ->
-                s.moveSelection(direction.toRight, (e.shiftKey) ? onePage : oneStep);
-                break;
-            case 40: // v
-                s.moveSelection(direction.toBottom, (e.shiftKey) ? onePage : oneStep);
-                break;
-        }
+            } else if (myState.isResizeDrag) {
+                myState.selections[0].resize(myState.expectResize, myState.grid.nearest(mx), myState.grid.nearest(my));
+                myState.valid = false;
+            } else if (myState.isLinkDrag) {
 
-    }, true);
-
-
-    canvas.addEventListener('mouseup', function (e) {
-        myState.dragging = false;
-        myState.isResizeDrag = false;
-        myState.expectResize = -1;
-
-        let mouse = myState.getMouse(e);
-        let mx = mouse.x;
-        let my = mouse.y;
-
-        if (myState.isLinkDrag) {
-            let upShape = null;
-            // si le link est d�j� existant, on le supprime.
-            for (let i = myState.shapes.length - 1; i >= 0; i--) {
-                if (myState.shapes[i].contains(mx, my)) {
-                    upShape = myState.shapes[i];
-                    // count down to prevent curent line deletion changing array size
-                    for (let j = myState.lines.length - 1; j >= 0; j--) {
-                        if (myState.lines[j].origin === myState.selections[myState.selections.length - 1] && myState.lines[j].destination === myState.shapes[i]) {
-                            myState.deleteLine(myState.lines[j]);
-                            myState.isLinkDrag = false;
-                            myState.expectLink = -1;
-                            myState.valid = false;
+                //check if mouse over different shape of selection
+                for (let i = myState.shapes.length - 1; i >= 0; i--) {
+                    if (myState.shapes[i].contains(mx, my)) {
+                        let upShape = myState.shapes[i];
+                        if (upShape !== myState.selection) {
+                            myState.canvas.style.cursor = 'copy';
                         }
                     }
                 }
+                myState.valid = false;
+            } else
+                // Implements cursor when over handles
+            if (myState.selections.length !== 0 && !myState.isResizeDrag && typeof (myState.selections[myState.selections.length - 1]) != 'undefined') {
+                if (typeof myState.selections[myState.selections.length - 1].drawHandles != "undefined") {
+                    myState.expectResize = myState.selections[myState.selections.length - 1].setCursor(myState, mx, my);
+                    // in selection, exit
+                    if (myState.expectResize !== -1) return;
+
+                    // not over a selection box, return to normal
+                    myState.isResizeDrag = false;
+                    myState.expectResize = -1;
+                    this.style.cursor = 'auto';
+
+                }
+                if (typeof myState.selections[myState.selections.length - 1].drawLinks != "undefined") {
+                    myState.expectLink = linkToHandleIndex(myState.selections[myState.selections.length - 1].setLinkCursor(myState, mx, my));
+                    // in selection, exit
+                    if (myState.expectLink !== -1) myState.canvas.title = 'Create link:\nDrag to shape you want to link';
+                    if (myState.expectLink !== -1) return;
+
+                    // not over a selection box, return to normal
+                    myState.canvas.title = '';
+                    myState.isLinkDrag = false;
+                    myState.expectLink = -1;
+                    this.style.cursor = 'auto';
+                }
+
+                myState.isDel = false;
+                myState.expectDelLine = -1;
+
+                // cursor on link delete
+                for (let i = myState.lines.length - 1; i >= 0; i--) {
+                    if (myState.lines[i].setCursor(myState, mx, my)) {
+                        myState.expectDelLine = i;
+                    }
+                    // in selection, exit
+                    if (myState.expectDelLine !== -1) return;
+                }
+                // not over a selection box, return to normal
+                myState.isDel = false;
+                myState.expectDelLine = -1;
+                this.style.cursor = 'auto';
             }
 
-            if (myState.valid) {
-                // si on est sur un Link <> link en cours, on cr�er le link
+            // end of implementing move over handles
+        }, true);
+
+
+        window.addEventListener('keydown', function (e) {
+            //logger.debug.log(e.keyCode);
+            switch (e.keyCode) {
+                case 46:
+                    if (e.shiftKey) {
+                        s.deleteSelection()
+                    }
+                    break;
+                case 65: // a
+                    if (!($('#jsonModal').hasClass('show'))) {
+                        if (e.ctrlKey) {
+                            s.selectAll();
+                            e.preventDefault();
+                        }
+                    }
+                    break;
+                case 37: // <-
+                    s.moveSelection(direction.toLeft, (e.shiftKey) ? onePage : oneStep);
+                    break;
+                case 38: // ^
+                    s.moveSelection(direction.toTop, (e.shiftKey) ? onePage : oneStep);
+                    break;
+                case 39: // ->
+                    s.moveSelection(direction.toRight, (e.shiftKey) ? onePage : oneStep);
+                    break;
+                case 40: // v
+                    s.moveSelection(direction.toBottom, (e.shiftKey) ? onePage : oneStep);
+                    break;
+            }
+
+        }, true);
+
+
+        canvas.addEventListener('mouseup', function (e) {
+            myState.dragging = false;
+            myState.isResizeDrag = false;
+            myState.expectResize = -1;
+
+            let mouse = myState.getMouse(e);
+            let mx = mouse.x;
+            let my = mouse.y;
+
+            if (myState.isLinkDrag) {
+                let upShape = null;
+                // si le link est d�j� existant, on le supprime.
                 for (let i = myState.shapes.length - 1; i >= 0; i--) {
                     if (myState.shapes[i].contains(mx, my)) {
                         upShape = myState.shapes[i];
-
-                        myState.addLine(new Line(myState.selections[myState.selections.length - 1], myState.expectLink, upShape));
-                        myState.isLinkDrag = false;
-                        myState.expectLink = -1;
-                        myState.valid = false;
-                        return;
+                        // count down to prevent curent line deletion changing array size
+                        for (let j = myState.lines.length - 1; j >= 0; j--) {
+                            if (myState.lines[j].origin === myState.selections[myState.selections.length - 1] && myState.lines[j].destination === myState.shapes[i]) {
+                                myState.deleteLine(myState.lines[j]);
+                                myState.isLinkDrag = false;
+                                myState.expectLink = -1;
+                                myState.valid = false;
+                            }
+                        }
                     }
                 }
-                myState.valid = false;
+
+                if (myState.valid) {
+                    // si on est sur un Link <> link en cours, on cr�er le link
+                    for (let i = myState.shapes.length - 1; i >= 0; i--) {
+                        if (myState.shapes[i].contains(mx, my)) {
+                            upShape = myState.shapes[i];
+
+                            myState.addLine(new Line(myState.selections[myState.selections.length - 1], myState.expectLink, upShape));
+                            myState.isLinkDrag = false;
+                            myState.expectLink = -1;
+                            myState.valid = false;
+                            return;
+                        }
+                    }
+                    myState.valid = false;
+                }
             }
-        }
 
-        if (myState.isDel) {
-            myState.lines.splice(myState.expectDelLine, 1);
+            if (myState.isDel) {
+                myState.lines.splice(myState.expectDelLine, 1);
 
 
-            myState.isDel = false;
-            myState.expectDelLine = -1;
+                myState.isDel = false;
+                myState.expectDelLine = -1;
+                myState.valid = false;
+                return;
+            }
+
+            // stop selecting Frame
+            myState.isSelectDrag = false;
+            myState.selectFrame = null;
             myState.valid = false;
-            return;
-        }
-
-        // stop selecting Frame 
-        myState.isSelectDrag = false;
-        myState.selectFrame = null;
-        myState.valid = false;
 
 
-        if (myState.selections.length === 1) {
-            callbackEvent(myState.selections[0]);
-        } else {
-            callbackEvent(myState);
-        }
-        myState.updMenu()
-        myState.exportJson();
+            if (myState.selections.length === 1) {
+                callbackEvent(myState.selections[0]);
+            } else {
+                callbackEvent(myState);
+            }
+            myState.updMenu()
+            myState.exportJson();
 
-    }, true);
+        }, true);
 
-    // double click for making new shapes
-    canvas.addEventListener('dblclick', function (e) {
-        let mouse = myState.getMouse(e);
-        myState.lastCtxMenuPoint = new Point(mouse.x, mouse.y);
-        let updateObj = [{
-            name: 'delete',
-            disable: (myState.selections.length === 0)
-        }];
-        $('#canvas1')
-            .contextMenu('update', updateObj)
-            .contextMenu('open', {top: e.pageY, left: e.pageX});
-    }, true);
+        // double click for making new shapes
+        canvas.addEventListener('dblclick', function (e) {
+            let mouse = myState.getMouse(e);
+            myState.lastCtxMenuPoint = new Point(mouse.x, mouse.y);
+            let updateObj = [{
+                name: 'delete',
+                disable: (myState.selections.length === 0)
+            }];
+            $('#canvas1')
+                .contextMenu('update', updateObj)
+                .contextMenu('open', {top: e.pageY, left: e.pageX});
+        }, true);
 
-    // **** Options! ****
+        // **** Options! ****
 
-    this.selectionColor = SEL_COLOR; //'#CC0000';
-    this.selectionWidth = 2;
-    this.interval = 30;
+        this.selectionColor = SEL_COLOR; //'#CC0000';
+        this.selectionWidth = 2;
+        this.interval = 30;
 
-    setInterval(function () {
-       myState.draw();
-    }, myState.interval);
+        setInterval(function () {
+            myState.draw();
+        }, myState.interval);
+    }
 }
 
 CanvasState.prototype.run = async function () {
@@ -1918,9 +1920,7 @@ CanvasState.prototype.deleteShape = function(shape) {
     }
 };
 
-CanvasState.prototype.load = function () {
 
-}
 
 $('#jsonModal').on('show.bs.modal', function (event) {
     logger.debug.log(event.relatedTarget);
@@ -2066,55 +2066,41 @@ CanvasState.prototype.clear = function () {
 // While draw is called as often as the INTERVAL variable demands,
 // It only ever does something if the canvas gets invalidated by our code
 CanvasState.prototype.draw = function () {
-    // if our state is invalid, redraw and validate!
-    if (!this.valid) {
+    if (this.designTime) {
+        // if our state is invalid, redraw and validate!
+        if (!this.valid) {
 
-        this.canvas.width = this.w;
-        this.canvas.height = this.h;
+            this.canvas.width = this.w;
+            this.canvas.height = this.h;
 
-        this.resize(false);
+            this.resize(false);
 
-        let ctx = this.ctx;
-        let shapes = this.shapes;
-        let lines = this.lines;
-        this.clear();
+            let ctx = this.ctx;
+            let shapes = this.shapes;
+            let lines = this.lines;
+            this.clear();
 
-        // draw all shapes
-        let l = shapes.length;
-        for (let i = 0; i < l; i++) {
-            if (shapes[i] !== this.selection) {
-                let shape = shapes[i];
-                // We can skip the drawing of elements that have moved off the screen:
-                if (shape.x > this.width || shape.y > this.height ||
-                    shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
-                shapes[i].draw(ctx);
+            // draw all shapes
+            let l = shapes.length;
+            for (let i = 0; i < l; i++) {
+                if (shapes[i] !== this.selection) {
+                    let shape = shapes[i];
+                    // We can skip the drawing of elements that have moved off the screen:
+                    if (shape.x > this.width || shape.y > this.height ||
+                        shape.x + shape.w < 0 || shape.y + shape.h < 0) continue;
+                    shapes[i].draw(ctx);
+                }
             }
-        }
 
-        let mySel = null;
-        // draw selection
-        // right now this is just a stroke along the edge of the selected Shape
-        if (this.selections.length > 0) {
-            this.selections[this.selections.length - 1].draw(ctx);
+            let mySel = null;
+            // draw selection
+            // right now this is just a stroke along the edge of the selected Shape
+            if (this.selections.length > 0) {
+                this.selections[this.selections.length - 1].draw(ctx);
 
-            ctx.strokeStyle = this.selectionColor;
-            ctx.lineWidth = this.selectionWidth;
-            mySel = this.selections[this.selections.length - 1];
-            mySel.drawStroke(ctx);
-            //this.drawHandles(ctx, mySel);
-            if (typeof mySel.drawHandles != "undefined")
-                mySel.drawHandles(ctx);
-
-            if (typeof mySel.drawLinks != "undefined")
-                mySel.drawLinks(ctx);
-
-        }
-
-        if (this.selections.length > 0) {
-            for (let i = 0; i < this.selections.length; i++) {
                 ctx.strokeStyle = this.selectionColor;
                 ctx.lineWidth = this.selectionWidth;
-                mySel = this.selections[i];
+                mySel = this.selections[this.selections.length - 1];
                 mySel.drawStroke(ctx);
                 //this.drawHandles(ctx, mySel);
                 if (typeof mySel.drawHandles != "undefined")
@@ -2122,23 +2108,39 @@ CanvasState.prototype.draw = function () {
 
                 if (typeof mySel.drawLinks != "undefined")
                     mySel.drawLinks(ctx);
+
             }
-        }
 
-        // draw lines
-        l = lines.length;
-        for (let i = l-1; i >= 0; i--) {
-        //for (let i = 0; i < l; i++) {
-            lines[i].draw(ctx);
-        }
+            if (this.selections.length > 0) {
+                for (let i = 0; i < this.selections.length; i++) {
+                    ctx.strokeStyle = this.selectionColor;
+                    ctx.lineWidth = this.selectionWidth;
+                    mySel = this.selections[i];
+                    mySel.drawStroke(ctx);
+                    //this.drawHandles(ctx, mySel);
+                    if (typeof mySel.drawHandles != "undefined")
+                        mySel.drawHandles(ctx);
 
-        // draw selectBox
-        if (this.selectFrame != null) {
-            this.selectFrame.draw(ctx);
-        }
+                    if (typeof mySel.drawLinks != "undefined")
+                        mySel.drawLinks(ctx);
+                }
+            }
 
-        // ** Add stuff you want drawn on top all the time here **
-        this.valid = true;
+            // draw lines
+            l = lines.length;
+            for (let i = l - 1; i >= 0; i--) {
+                //for (let i = 0; i < l; i++) {
+                lines[i].draw(ctx);
+            }
+
+            // draw selectBox
+            if (this.selectFrame != null) {
+                this.selectFrame.draw(ctx);
+            }
+
+            // ** Add stuff you want drawn on top all the time here **
+            this.valid = true;
+        }
     }
 };
 
@@ -2224,45 +2226,54 @@ function loadGraph(save) {
     s.parameters = save.parameters;
     s.onlydeletechildren = save.onlydeletechildren;
     s.description = save.description;
-    s.grid.size = save.grid.size;
-    s.grid.snap = save.grid.snap;
-    s.grid.color = save.grid.color;
-    s.grid.active = save.grid.active;
 
     let initShapes =[];
-
-
     for (let i=0; i<save.shapes.length; i++) {
-//        logger.debug.log(save.shapes[i])
         initShapes[save.shapes[i].name]=new window[save.shapes[i].type](s, save.shapes[i].x, save.shapes[i].y, save.shapes[i].w, save.shapes[i].h, save.shapes[i].label, save.shapes[i].fill);
         initShapes[save.shapes[i].name].name = save.shapes[i].name
         initShapes[save.shapes[i].name].description = save.shapes[i].description
         initShapes[save.shapes[i].name].execFunction = save.shapes[i].function
         initShapes[save.shapes[i].name].trueOnLeft = save.shapes[i].trueOnLeft
-//        logger.debug.log(save.shapes[i].parameters)
         initShapes[save.shapes[i].name].parameters = save.shapes[i].parameters
         s.addShape(initShapes[save.shapes[i].name])
     }
-//    logger.debug.log(initShapes)
 
     for (let i=0; i<save.lines.length; i++) {
         s.addLine(new Line(initShapes[save.lines[i].origin], save.lines[i].handle, initShapes[save.lines[i].destination]));
     }
 
-    setGrid();
+
+    if (s.designTime) {
+        s.grid.size = save.grid.size;
+        s.grid.snap = save.grid.snap;
+        s.grid.color = save.grid.color;
+        s.grid.active = save.grid.active;
+
+        setGrid();
+    }
 
 }
 
 let save = {}
 
+ function initRunTime(save) {
+    s = new CanvasState(false)
+    loadGraph(save)
+    s.run()
+}
+
 function initCanvas() {
     s = new CanvasState(document.getElementById('canvas1'))
     loadGraph(save)
     showPropertyEditor(s)
-
 }
-function init() {
-    fetch('./js/initialGraph.json')
+function init(file) {
+    if (file===null) {
+        file = 'initialGraph'
+    }
+    file ='./js/'+file+'.json'
+
+    fetch(file)
         .then((response) => response.json())
         .then((json) => {
             save = json
@@ -2270,6 +2281,16 @@ function init() {
         });
 }
 
+function runtimeInit(file) {
+    file ='./js/'+file+'.json'
+
+    fetch(file)
+        .then((response) => response.json())
+        .then((json) => {
+            save = json
+            initRunTime(save)
+        });
+}
 
 
 
